@@ -27,11 +27,8 @@ $stats    = get_monthly_stats($userId);
             </div>
             <nav class="sidebar-nav">
                 <a href="dashboard.php" class="nav-item active">Dashboard</a>
-                <a href="deposit.php" class="nav-item">Deposit</a>
-                <a href="withdraw.php" class="nav-item">Withdraw</a>
                 <a href="transfer.php" class="nav-item">Transfer</a>
                 <a href="qr_payment.php" class="nav-item">QR Payment</a>
-                <a href="atm_simulator.php" class="nav-item">ATM Simulator</a>
                 <a href="transactions.php" class="nav-item">Transactions</a>
                 <a href="logout.php" class="nav-item nav-danger">Logout</a>
             </nav>
@@ -58,11 +55,8 @@ $stats    = get_monthly_stats($userId);
                 <div class="card card-actions">
                     <h3>Quick Actions</h3>
                     <div class="quick-actions">
-                        <a href="deposit.php" class="chip chip-green">Deposit</a>
-                        <a href="withdraw.php" class="chip chip-red">Withdraw</a>
                         <a href="transfer.php" class="chip chip-blue">Transfer</a>
                         <a href="qr_payment.php" class="chip chip-purple">QR Pay</a>
-                        <a href="atm_simulator.php" class="chip chip-dark">ATM</a>
                         <a href="transactions.php" class="chip chip-grey">History</a>
                     </div>
                 </div>
@@ -70,7 +64,7 @@ $stats    = get_monthly_stats($userId);
 
             <section class="charts-row">
                 <div class="card">
-                    <h3>Monthly Deposits vs Withdrawals</h3>
+                    <h3>Monthly Analytics</h3>
                     <canvas id="depositsWithdrawalsChart"></canvas>
                 </div>
                 <div class="card">

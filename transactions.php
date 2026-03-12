@@ -25,11 +25,8 @@ $balance      = get_user_balance($userId);
             </div>
             <nav class="sidebar-nav">
                 <a href="dashboard.php" class="nav-item">Dashboard</a>
-                <a href="deposit.php" class="nav-item">Deposit</a>
-                <a href="withdraw.php" class="nav-item">Withdraw</a>
                 <a href="transfer.php" class="nav-item">Transfer</a>
                 <a href="qr_payment.php" class="nav-item">QR Payment</a>
-                <a href="atm_simulator.php" class="nav-item">ATM Simulator</a>
                 <a href="transactions.php" class="nav-item active">Transactions</a>
                 <a href="logout.php" class="nav-item nav-danger">Logout</a>
             </nav>
