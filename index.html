@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusBank | Future of Digital Banking</title>
+    <meta name="description" content="Experience modern, secure, and seamless digital banking with NexusBank.">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <div class="logo">
+                <i class="fas fa-university icon-primary"></i>
+                <span>NexusBank</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html" class="active">
+                        <font color="black">Home</font>
+                    </a></li>
+                <li><a href="#services">Services</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#" onclick="openContactModal(event)">Contact</a></li>
+                <li><a href="login.html" class="btn btn-outline">Login</a></li>
+                <li><a href="register.html" class="btn btn-primary">
+                        <font color="white">Register</font>
+                    </a></li>
+            </ul>
+            <div class="mobile-menu-btn">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero">
+        <div class="container hero-container">
+            <div class="hero-content">
+                <div class="badge">Next Generation Banking</div>
+                <h1>Secure, Fast & <br><span class="text-gradient">Modern Banking</span></h1>
+                <p>Welcome to NexusBank. Experience a unified financial ecosystem that puts you in control. Transfer
+                    money via UPI, scan QR codes, and track analytics all in one place.</p>
+                <div class="hero-cta">
+                    <a href="register.html" class="btn btn-primary btn-lg">Open an Account</a>
+                    <a href="login.html" class="btn btn-outline btn-lg">Login to Dashboard</a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <h2>100%</h2>
+                        <p>Secure</p>
+                    </div>
+                    <div class="stat-item">
+                        <h2>0%</h2>
+                        <p>Hidden Fees</p>
+                    </div>
+                    <div class="stat-item">
+                        <h2>24/7</h2>
+                        <p>Support</p>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-image">
+                <!-- We will wire up the generated image here via JS or inline after generation -->
+                <img src="assets/hero_illustration.png" alt="Modern Digital Banking Dashboard" id="hero-illustration"
+                    class="floating-img">
+            </div>
+        </div>
+    </header>
+
+    <!-- Features Section Preview -->
+    <section id="services" class="features section">
+        <div class="container">
+            <div class="section-title">
+                <h2>Our Premium Services</h2>
+                <p>Everything you need to manage your money efficiently.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="icon-wrapper"><i class="fas fa-mobile-alt"></i></div>
+                    <h3>UPI Transfers</h3>
+                    <p>Send money seamlessly using mobile numbers. Instant and secure.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon-wrapper"><i class="fas fa-qrcode"></i></div>
+                    <h3>QR Payments</h3>
+                    <p>Generate unique QR codes or scan to pay anywhere instantly.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon-wrapper"><i class="fas fa-chart-pie"></i></div>
+                    <h3>Smart Analytics</h3>
+                    <p>Track your spending with automated categorized visual charts.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="section" style="background-color: #fff;">
+        <div class="container">
+            <div class="section-title">
+                <h2>About NexusBank</h2>
+                <p>Redefining trust and technology in the digital banking space.</p>
+            </div>
+            <div style="display: flex; gap: 40px; align-items: center; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 300px;">
+                    <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=600&q=80" alt="About Us" style="width: 100%; border-radius: var(--radius-md); box-shadow: var(--shadow-md);">
+                </div>
+                <div style="flex: 1; min-width: 300px;">
+                    <h3>Our Vision</h3>
+                    <p style="color: var(--text-light); margin-bottom: 20px;">We believe banking should be invisible, effortless, and universally accessible. NexusBank was born out of the desire to build a financial platform that genuinely serves its users with transparency and cutting-edge security.</p>
+                    <ul style="color: var(--text-light); line-height: 2;">
+                        <li><i class="fas fa-check-circle" style="color: var(--success); margin-right: 8px;"></i> Zero hidden charges</li>
+                        <li><i class="fas fa-check-circle" style="color: var(--success); margin-right: 8px;"></i> Bank-grade encryption</li>
+                        <li><i class="fas fa-check-circle" style="color: var(--success); margin-right: 8px;"></i> Lightning fast settlements</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Modal -->
+    <div class="modal-overlay" id="contactModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeContactModal()"><i class="fas fa-times"></i></button>
+            <div class="section-title" style="margin-bottom: 24px;">
+                <h2 style="font-size: 1.8rem;">Get in Touch</h2>
+                <p style="font-size: 0.95rem;">We're here to help you 24/7.</p>
+            </div>
+            <form id="contactForm" onsubmit="handleContactSubmit(event)">
+                <div class="form-group">
+                    <label class="form-label">Name</label>
+                    <input type="text" class="form-control" placeholder="Your Name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" placeholder="you@domain.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Message</label>
+                    <textarea class="form-control" placeholder="How can we help?" rows="4" required style="resize: vertical;"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Send Message</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dark Footer -->
+    <footer style="background-color: #000; color: #fff; padding: 60px 0 24px;">
+        <div class="container footer-content" style="grid-template-columns: 2fr 1fr 1fr 1fr; border-bottom: 1px solid #333; padding-bottom: 40px; margin-bottom: 24px;">
+            <div class="footer-brand">
+                <div class="logo" style="color: #fff;">
+                    <i class="fas fa-university icon-primary" style="color: #fff;"></i>
+                    <span>NexusBank</span>
+                </div>
+                <p style="color: #aaa; margin-top: 16px; max-width: 300px;">Building the financial infrastructure of tomorrow. Secure, transparent, and seamless.</p>
+            </div>
+            
+            <div class="footer-links">
+                <h4 style="color: #fff; margin-bottom: 24px;">Company</h4>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="margin-bottom: 12px;"><a href="#about" style="color: #aaa; text-decoration: none;">About Us</a></li>
+                    <li style="margin-bottom: 12px;"><a href="#services" style="color: #aaa; text-decoration: none;">Services</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-links">
+                <h4 style="color: #fff; margin-bottom: 24px;">Legal</h4>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="margin-bottom: 12px;"><a href="privacy.html" style="color: #aaa; text-decoration: none;">Privacy Policy</a></li>
+                    <li style="margin-bottom: 12px;"><a href="terms.html" style="color: #aaa; text-decoration: none;">Terms of Service</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-links">
+                <h4 style="color: #fff; margin-bottom: 24px;">Contact Info</h4>
+                <ul style="list-style: none; padding: 0; color: #aaa;">
+                    <li style="margin-bottom: 16px; display: flex; align-items: flex-start; gap: 12px;">
+                        <i class="fas fa-map-marker-alt" style="margin-top: 4px; color: var(--text-inverse);"></i>
+                        <span>123 Banking Street, Tech District,<br>NY 10001, USA</span>
+                    </li>
+                    <li style="margin-bottom: 16px; display: flex; align-items: center; gap: 12px;">
+                        <i class="fas fa-envelope" style="color: var(--text-inverse);"></i>
+                        <a href="mailto:support@nexusbank.com" style="color: #aaa; text-decoration: none;">support@nexusbank.com</a>
+                    </li>
+                    <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 12px;">
+                        <i class="fas fa-phone-alt" style="color: var(--text-inverse);"></i>
+                        <a href="tel:+18001234567" style="color: #aaa; text-decoration: none;">+1 (800) 123-4567</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="container footer-bottom" style="display: flex; justify-content: space-between; color: #777; font-size: 0.9rem;">
+            <p>&copy; 2026 NexusBank. All rights reserved.</p>
+            <p><a href="admin.html" style="color: #555; text-decoration: none;">Admin Portal</a></p>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+    <script>
+        function openContactModal(e) {
+            if(e) e.preventDefault();
+            document.getElementById('contactModal').classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        }
+
+        function closeContactModal() {
+            document.getElementById('contactModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function handleContactSubmit(e) {
+            e.preventDefault();
+            alert('Message sent successfully! Our team will contact you soon.');
+            closeContactModal();
+            document.getElementById('contactForm').reset();
+        }
+
+        // Close on outside click
+        document.getElementById('contactModal').addEventListener('click', function(e) {
+            if(e.target === this) {
+                closeContactModal();
+            }
+        });
+    </script>
+</body>
+
+</html>
