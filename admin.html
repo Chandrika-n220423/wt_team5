@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portal | NexusBank</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+    
+    <!-- Admin Login UI vs Dashboard UI Check -->
+    <div id="adminLoginView" class="auth-container" style="display:flex;">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h2>Admin Login</h2>
+                <p>Authorized personnel only.</p>
+            </div>
+            <form id="adminLoginForm">
+                <div id="adminError" class="error-message"></div>
+                <div class="form-group">
+                    <label class="form-label">Admin Pin Code</label>
+                    <input type="password" id="adminPin" class="form-control" placeholder="Enter PIN (Demo: 0000)" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Access Admin Hub</button>
+            </form>
+            <div style="text-align:center; margin-top:16px;">
+                <a href="index.html">Return to main site</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard UI -->
+    <div id="adminDashboardView" style="display:none; min-height: 100vh; background: var(--bg-main); padding: 40px 24px;">
+        <div style="max-width: 1000px; margin: 0 auto; width: 100%;">
+            
+            <!-- Admin Header -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; background: var(--bg-card); padding: 24px 32px; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <div style="width: 50px; height: 50px; background: rgba(255, 59, 48, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-shield-alt" style="font-size: 1.5rem; color: var(--danger);"></i>
+                    </div>
+                    <div>
+                        <h2 style="margin: 0; font-size: 1.5rem;">System Oversight</h2>
+                        <p style="color: var(--text-light); margin: 0; font-size: 0.95rem;">Admin Control Panel</p>
+                    </div>
+                </div>
+                <button onclick="logoutAdmin()" class="btn btn-outline" style="color: var(--danger); border-color: rgba(255, 59, 48, 0.3);">
+                    <i class="fas fa-sign-out-alt" style="margin-right:8px;"></i> Exit System
+                </button>
+            </div>
+
+            <!-- Stats -->
+            <div class="cards-row" style="margin-bottom: 32px;">
+                <div class="dashboard-card" style="text-align: center; padding: 32px 24px;">
+                    <div class="card-title" style="justify-content: center; color: var(--text-light);">Total Active Users</div>
+                    <div class="card-value" id="adminTotalUsers">0</div>
+                </div>
+                <div class="dashboard-card" style="text-align: center; padding: 32px 24px;">
+                    <div class="card-title" style="justify-content: center; color: var(--text-light);">System Liquidity</div>
+                    <div class="card-value" id="adminTotalBalance" style="color: var(--success);">₹0.00</div>
+                </div>
+                <div class="dashboard-card" style="text-align: center; background: linear-gradient(135deg, var(--danger) 0%, #ff6b6b 100%); color: white; border: none; padding: 32px 24px;">
+                    <div class="card-title" style="justify-content: center; color: rgba(255,255,255,0.9);">Total Transactions</div>
+                    <div class="card-value" id="adminTotalTx" style="color: white;">0</div>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="dashboard-card table-container" style="padding:0;">
+                <div style="padding: 24px 32px; border-bottom: 1px solid var(--border-color); background: #fafafa; border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
+                    <h3 style="margin:0; text-align: center;">User Management & Audit</h3>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="data-table" style="text-align: center; width: 100%;">
+                        <thead>
+                            <tr>
+                                <th style="text-align: center;">User ID</th>
+                                <th style="text-align: center;">Name</th>
+                                <th style="text-align: center;">Email</th>
+                                <th style="text-align: center;">Balance</th>
+                                <th style="text-align: center;">Status</th>
+                                <th style="text-align: center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminUsersTable">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Simple Admin check
+        document.getElementById('adminLoginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const pin = document.getElementById('adminPin').value;
+            if(pin === '0000') {
+                document.getElementById('adminLoginView').style.display = 'none';
+                document.getElementById('adminDashboardView').style.display = 'flex';
+                loadAdminData();
+            } else {
+                document.getElementById('adminError').innerText = "Invalid Admin PIN (Hint: 0000)";
+                document.getElementById('adminError').style.display = 'block';
+            }
+        });
+
+        function logoutAdmin() {
+            document.getElementById('adminDashboardView').style.display = 'none';
+            document.getElementById('adminLoginView').style.display = 'flex';
+            document.getElementById('adminLoginForm').reset();
+        }
+
+        function loadAdminData() {
+            const users = JSON.parse(localStorage.getItem('nexusUsers')) || [];
+            
+            // Recompute stats
+            let totalBal = 0;
+            let totalTxCount = 0;
+            
+            users.forEach(u => {
+                totalBal += u.balance;
+                totalTxCount += u.transactions.length;
+            });
+
+            document.getElementById('adminTotalUsers').innerText = users.length;
+            document.getElementById('adminTotalBalance').innerText = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalBal);
+            document.getElementById('adminTotalTx').innerText = totalTxCount;
+
+            const tbody = document.getElementById('adminUsersTable');
+            tbody.innerHTML = '';
+
+            users.forEach(u => {
+                const isBlocked = u.isBlocked === true;
+                
+                tbody.innerHTML += `
+                    <tr style="${isBlocked ? 'opacity:0.6; background:#fff0f0;' : ''}">
+                        <td style="font-family:monospace; font-size:0.85rem;">${u.id}</td>
+                        <td style="font-weight:600;">${u.name}</td>
+                        <td>${u.email}</td>
+                        <td style="font-weight:600;">₹${u.balance.toFixed(2)}</td>
+                        <td>
+                            <span class="badge-status ${isBlocked ? 'badge-danger' : 'badge-success'}">${isBlocked ? 'BLOCKED' : 'ACTIVE'}</span>
+                        </td>
+                        <td>
+                            <button onclick="toggleBlockUser('${u.id}')" class="btn btn-outline" style="padding:4px 8px; font-size:0.8rem; margin-right:8px;">${isBlocked ? 'Unblock' : 'Block'}</button>
+                            <button onclick="deleteUser('${u.id}')" class="btn" style="background:var(--danger); color:white; padding:4px 8px; font-size:0.8rem; border:none;">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function toggleBlockUser(id) {
+            let users = JSON.parse(localStorage.getItem('nexusUsers')) || [];
+            const idx = users.findIndex(u => u.id === id);
+            if(idx > -1) {
+                users[idx].isBlocked = !users[idx].isBlocked;
+                localStorage.setItem('nexusUsers', JSON.stringify(users));
+                loadAdminData(); // Refresh UI
+            }
+        }
+
+        function deleteUser(id) {
+            if(confirm("Are you sure you want to permanently delete this user?")) {
+                let users = JSON.parse(localStorage.getItem('nexusUsers')) || [];
+                users = users.filter(u => u.id !== id);
+                localStorage.setItem('nexusUsers', JSON.stringify(users));
+                
+                // Cleanup their session if they were logged in
+                const session = JSON.parse(localStorage.getItem('nexusSession'));
+                if(session && session.userId === id) localStorage.removeItem('nexusSession');
+                
+                loadAdminData(); // Refresh UI
+            }
+        }
+    </script>
+</body>
+</html>
