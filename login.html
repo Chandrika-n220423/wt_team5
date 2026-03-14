@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login  NexusBank</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+
+</head>
+<body>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <a href="index.html" class="logo">
+                    <i class="fas fa-university icon-primary"></i>
+                    <span>NexusBank</span>
+                </a>
+                <h2 id="authTitle">Secure Login</h2>
+                <p id="authSubtitle" style="color:var(--text-light); margin-top:8px;">Access your digital banking dashboard.</p>
+            </div>
+
+            <!-- Login Credentials & OTP Form -->
+            <form id="loginForm" onsubmit="handleFinalLogin(event)">
+                <div id="loginError" class="error-message"></div>
+                <div id="loginSuccess" class="success-message"></div>
+                
+                <div class="form-group">
+                    <label class="form-label" style="text-align:left;">Phone Number</label>
+                    <div style="display: flex; gap: 10px; align-items: stretch;">
+                        <input type="tel" id="loginPhone" class="form-control" placeholder="Enter phone number" required pattern="[0-9]+" style="flex:1;">
+                        <button type="button" class="btn btn-outline" id="sendOtpBtn" onclick="handleSendOtp()" style="white-space:nowrap; display:flex; align-items:center;">Send OTP</button>
+                    </div>
+                </div>
+
+                <div class="form-group" id="otpGroup" style="display: none;">
+                    <label class="form-label" style="text-align:left;">Enter OTP</label>
+                    <input type="text" id="loginOtp" class="form-control" placeholder="6-digit OTP" maxlength="6" pattern="[0-9]{6}">
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block btn-lg" id="loginSubmitBtn">Login</button>
+            </form>
+
+            <div class="auth-footer" id="authFooterText">
+                Don't have an account? <a href="register.html">Register here</a><br><br>
+                <a href="admin.html">Admin Login</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        // OTP auto-focus logic
+        const otpInputs = document.querySelectorAll('.otp-input');
+        otpInputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                if(e.target.value.length === 1) {
+                    if(index < otpInputs.length - 1) {
+                        otpInputs[index + 1].focus();
+                    }
+                }
+            });
+            input.addEventListener('keydown', (e) => {
+                if(e.key === 'Backspace' && !e.target.value) {
+                    if(index > 0) {
+                        otpInputs[index - 1].focus();
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
