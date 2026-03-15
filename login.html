@@ -28,16 +28,13 @@
                 <div id="loginSuccess" class="success-message"></div>
                 
                 <div class="form-group">
-                    <label class="form-label" style="text-align:left;">Phone Number</label>
-                    <div style="display: flex; gap: 10px; align-items: stretch;">
-                        <input type="tel" id="loginPhone" class="form-control" placeholder="Enter phone number" required pattern="[0-9]+" style="flex:1;">
-                        <button type="button" class="btn btn-outline" id="sendOtpBtn" onclick="handleSendOtp()" style="white-space:nowrap; display:flex; align-items:center;">Send OTP</button>
-                    </div>
+                    <label class="form-label" style="text-align:left;">Email Address</label>
+                    <input type="email" id="loginEmail" class="form-control" placeholder="Enter email address" required>
                 </div>
 
-                <div class="form-group" id="otpGroup" style="display: none;">
-                    <label class="form-label" style="text-align:left;">Enter OTP</label>
-                    <input type="text" id="loginOtp" class="form-control" placeholder="6-digit OTP" maxlength="6" pattern="[0-9]{6}">
+                <div class="form-group">
+                    <label class="form-label" style="text-align:left;">Password</label>
+                    <input type="password" id="loginPassword" class="form-control" placeholder="Enter your password" required>
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-block btn-lg" id="loginSubmitBtn">Login</button>

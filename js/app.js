@@ -183,45 +183,47 @@ function setupTransferLogic() {
 
     // Reset receiver on input change
     phoneInput.addEventListener('input', () => {
-        validReceiver = null;
         receiverDisplay.innerText = '';
-        sendBtn.disabled = true;
     });
 
     verifyBtn.addEventListener('click', () => {
         document.getElementById('transError').style.display='none';
-        const phone = phoneInput.value.trim();
+        const email = phoneInput.value.trim();
         
-        if(phone === currentUser.phone) {
+        if(email === currentUser.email) {
             document.getElementById('transError').innerText = "Cannot transfer to yourself.";
             document.getElementById('transError').style.display = 'block';
             return;
         }
 
-        allUsers = JSON.parse(localStorage.getItem('nexusUsers')) || [];
-        const receiver = allUsers.find(u => u.phone === phone);
-        
-        if (receiver) {
-            validReceiver = receiver;
-            receiverDisplay.innerText = `Verified: ${receiver.name}`;
+        // Mock verification - in a real app you'd hit an API to check if the user exists
+        if(email) {
+            validReceiver = { email }; // Set the object with email
+            receiverDisplay.innerText = `Verified: ${email}`;
             sendBtn.disabled = false;
         } else {
-            document.getElementById('transError').innerText = "Receiver not found.";
-            document.getElementById('transError').style.display = 'block';
+             document.getElementById('transError').innerText = "Please enter an email.";
+             document.getElementById('transError').style.display = 'block';
         }
     });
 
-    document.getElementById('transferForm').addEventListener('submit', (e) => {
+    document.getElementById('transferForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        if (!validReceiver) return;
         
         const errorDiv = document.getElementById('transError');
         const successDiv = document.getElementById('transSuccess');
         errorDiv.style.display = 'none';
         successDiv.style.display = 'none';
         
+        const email = phoneInput.value.trim();
+        if(!email) {
+            errorDiv.innerText = "Please enter an email.";
+            errorDiv.style.display = 'block';
+            return;
+        }
+
         const amount = parseFloat(document.getElementById('transAmount').value);
-        const desc = document.getElementById('transDesc').value || 'UPI Transfer';
+        const desc = document.getElementById('transDesc').value || 'Transfer';
         
         if (amount > currentUser.balance) {
             errorDiv.innerText = "Insufficient balance.";
@@ -229,61 +231,67 @@ function setupTransferLogic() {
             return;
         }
 
-        executeTransfer(validReceiver, amount, desc, 'UPI');
+        sendBtn.innerText = "Processing...";
+        sendBtn.disabled = true;
+
+        await executeTransfer(email, amount, desc);
         
         // Reset form
         document.getElementById('transferForm').reset();
         validReceiver = null;
         receiverDisplay.innerText = '';
-        sendBtn.disabled = true;
+        sendBtn.disabled = false;
+        sendBtn.innerText = "Send Money";
         
         successDiv.style.display = 'block';
         setTimeout(() => successDiv.style.display='none', 3000);
     });
 }
 
-function executeTransfer(receiver, amount, description, typeLabel) {
-    // Deduct
-    currentUser.balance -= amount;
-    const txSender = {
-        id: 'TX' + Date.now(),
-        date: new Date().toISOString(),
-        description: `To ${receiver.name} - ${description}`,
-        type: 'DEBIT',
-        amount: amount,
-        counterparty: receiver.name
-    };
-    currentUser.transactions.unshift(txSender);
-    
-    // Add Notification to Sender
-    addNotification(currentUser, `Sent ${formatMoney(amount)} to ${receiver.name}`);
+async function executeTransfer(toEmail, amount, description) {
+    const session = JSON.parse(localStorage.getItem('nexusSession'));
+    const token = session ? session.token : '';
 
-    // Add to Receiver
-    const recIndex = allUsers.findIndex(u => u.id === receiver.id);
-    if(recIndex !== -1) {
-        allUsers[recIndex].balance += amount;
-        const txRec = {
-            id: 'TX' + Date.now() + 'R',
-            date: new Date().toISOString(),
-            description: `From ${currentUser.name} - ${description}`,
-            type: 'CREDIT',
-            amount: amount,
-            counterparty: currentUser.name
-        };
-        allUsers[recIndex].transactions.unshift(txRec);
-        
-        // Add Notification to Receiver
-        addNotification(allUsers[recIndex], `Received ${formatMoney(amount)} from ${currentUser.name}`);
+    try {
+        const response = await fetch(`${API_URL}/users/transfer`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ toEmail, amount })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Success: Update the local balance
+            currentUser.balance = data.balance;
+            
+            // Add a mock transaction item for immediate UI update
+            const txSender = {
+                id: data.transaction ? data.transaction._id : ('TX' + Date.now()),
+                date: new Date().toISOString(),
+                description: `Sent to ${toEmail} - ${description}`,
+                type: 'DEBIT',
+                amount: amount
+            };
+            currentUser.transactions.unshift(txSender);
+            addNotification(currentUser, `Sent ${formatMoney(amount)} to ${toEmail}`);
+            
+            saveUserData();
+            loadUserData();
+        } else {
+            const errorDiv = document.getElementById('transError');
+            errorDiv.innerText = data.message || "Transfer failed.";
+            errorDiv.style.display = 'block';
+        }
+    } catch (error) {
+        console.error("Transfer Error:", error);
+        const errorDiv = document.getElementById('transError');
+        errorDiv.innerText = "Server error during transfer.";
+        errorDiv.style.display = 'block';
     }
-    
-    // Save state
-    saveUserData();
-    if(recIndex !== -1) {
-        localStorage.setItem('nexusUsers', JSON.stringify(allUsers));
-    }
-    
-    // Reload UI
-    loadUserData();
 }
 
 /**

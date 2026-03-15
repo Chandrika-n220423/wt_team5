@@ -57,99 +57,63 @@ async function handleRegistration(e){
 
 }
 
-module.exports = router;
-
 /* ===============================
-   SEND OTP (LOGIN STEP 1)
+   LOGIN WITH PASSWORD
 ================================ */
 
-async function handleSendOtp(){
+async function handleFinalLogin(e){
 
-    const phone = document.getElementById("loginPhone").value.trim();
+    e.preventDefault();
+
+    const email = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPassword").value;
     const errorDiv = document.getElementById("loginError");
-    const successDiv = document.getElementById("loginSuccess");
 
     errorDiv.style.display="none";
-    successDiv.style.display="none";
 
-    if(!phone){
-        showError(errorDiv,"Enter phone number");
+    if(!email || !password){
+        showError(errorDiv,"Please enter email and password");
         return;
     }
 
     try{
 
         const response = await fetch(`${API_URL}/login`,{
-
             method:"POST",
             headers:{
                 "Content-Type":"application/json"
             },
-
-            body: JSON.stringify({ phone })
-
+            body: JSON.stringify({ email, password })
         });
 
         const data = await response.json();
 
         if(response.ok){
+            // Sync with frontend legacy localStorage array so app.js doesn't crash
+            let mockUsers = JSON.parse(localStorage.getItem('nexusUsers')) || [];
+            let userId = data.user?.id || data.user?._id || data.userId || data.token;
+            let existing = mockUsers.find(u => u.id === userId);
+            if (!existing && data.user) {
+                 mockUsers.push({
+                     id: userId,
+                     name: data.user.name,
+                     email: data.user.email,
+                     phone: data.user.phone,
+                     balance: data.user.balance || 0,
+                     transactions: [],
+                     notifications: []
+                 });
+                 localStorage.setItem('nexusUsers', JSON.stringify(mockUsers));
+            }
 
-            const mockedOtp = "123456";
-
-            sessionStorage.setItem("expectedOtp",mockedOtp);
-            sessionStorage.setItem("pendingUser",data.userId);
-
-            successDiv.innerText = `OTP sent (Use: ${mockedOtp})`;
-            successDiv.style.display="block";
-
-            document.getElementById("otpGroup").style.display="block";
-
+            startSession(userId, data.token);
         }else{
-
-            showError(errorDiv,data.message);
-
+            showError(errorDiv, data.message || "Invalid credentials");
         }
 
     }catch(err){
-
-        showError(errorDiv,"Server error");
-
+        showError(errorDiv,"Server error. Please try again later.");
     }
-
-}
-
-/* ===============================
-   VERIFY OTP & LOGIN
-================================ */
-
-function handleFinalLogin(e){
-
-    e.preventDefault();
-
-    const enteredOtp = document.getElementById("loginOtp").value.trim();
-    const expectedOtp = sessionStorage.getItem("expectedOtp");
-    const userId = sessionStorage.getItem("pendingUser");
-
-    const errorDiv = document.getElementById("loginError");
-
-    errorDiv.style.display="none";
-
-    if(!enteredOtp){
-        showError(errorDiv,"Enter OTP");
-        return;
-    }
-
-    if(enteredOtp !== expectedOtp){
-
-        showError(errorDiv,"Invalid OTP");
-        return;
-
-    }
-
-    sessionStorage.removeItem("expectedOtp");
-    sessionStorage.removeItem("pendingUser");
-
-    startSession(userId);
 
 }
 
@@ -157,15 +121,15 @@ function handleFinalLogin(e){
    START SESSION
 ================================ */
 
-function startSession(userId){
+function startSession(userId, tokenstr){
 
-    const token = "token_" + Math.random().toString(36).substr(2);
+    const token = tokenstr || ("token_" + Math.random().toString(36).substr(2));
 
     const session = {
 
         userId:userId,
         token:token,
-        expiresAt: Date.now() + (1000 * 60 * 60 * 2)
+        expiresAt: Date.now() + (1000 * 60 * 60 * 24) // 24 hours to match backend expiresIn: "1d"
 
     };
 

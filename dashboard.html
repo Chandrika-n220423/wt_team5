@@ -188,9 +188,9 @@
                     <div class="form-panel">
                         <form id="transferForm">
                             <div class="form-group">
-                                <label class="form-label" style="text-align:left;">Receiver Phone Number</label>
+                                <label class="form-label" style="text-align:left;">Receiver Email Address</label>
                                 <div style="display:flex; gap:12px; align-items:stretch;">
-                                    <input type="tel" id="transPhone" class="form-control" placeholder="Enter 10-digit number" required pattern="[0-9]{10}" style="flex:1;">
+                                    <input type="email" id="transPhone" class="form-control" placeholder="Enter user's email" required style="flex:1;">
                                     <button type="button" class="btn btn-outline" id="verifyReceiverBtn" style="white-space:nowrap; display:flex; align-items:center;">Verify</button>
                                 </div>
                                 <div id="receiverNameDisplay" style="margin-top:8px; font-size:0.9rem; font-weight:600; color:var(--success); text-align:left;"></div>
@@ -211,7 +211,7 @@
                                 Available Balance: <strong style="color:var(--primary);" id="transAvailableBal">₹0.00</strong>
                             </div>
 
-                            <button type="submit" class="btn btn-primary btn-block" id="sendMoneyBtn" disabled>Send Money</button>
+                            <button type="submit" class="btn btn-primary btn-block" id="sendMoneyBtn">Send Money</button>
                         </form>
                     </div>
                 </section>
