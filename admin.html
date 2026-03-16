@@ -68,6 +68,30 @@
                 </div>
             </div>
 
+            <!-- Loans Table -->
+            <div class="dashboard-card table-container" style="padding:0; margin-bottom: 32px;">
+                <div style="padding: 24px 32px; border-bottom: 1px solid var(--border-color); background: #fafafa; border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
+                    <h3 style="margin:0; text-align: center;">Loan Applications</h3>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="data-table" style="text-align: center; width: 100%;">
+                        <thead>
+                            <tr>
+                                <th style="text-align: center;">Date</th>
+                                <th style="text-align: center;">Applicant</th>
+                                <th style="text-align: center;">Type</th>
+                                <th style="text-align: center;">Amount</th>
+                                <th style="text-align: center;">Status</th>
+                                <th style="text-align: center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminLoansTable">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <!-- Table -->
             <div class="dashboard-card table-container" style="padding:0;">
                 <div style="padding: 24px 32px; border-bottom: 1px solid var(--border-color); background: #fafafa; border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
@@ -116,7 +140,7 @@
             document.getElementById('adminLoginForm').reset();
         }
 
-        function loadAdminData() {
+        async function loadAdminData() {
             const users = JSON.parse(localStorage.getItem('nexusUsers')) || [];
             
             // Recompute stats
@@ -154,6 +178,93 @@
                     </tr>
                 `;
             });
+
+            // Load Loans from Backend
+            await fetchAndRenderLoans();
+        }
+
+        async function fetchAndRenderLoans() {
+            try {
+                const res = await fetch('http://localhost:5000/api/loans/all');
+                const data = await res.json();
+                const tbody = document.getElementById('adminLoansTable');
+                tbody.innerHTML = '';
+                
+                if (!data.loans || data.loans.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6">No loan applications found</td></tr>';
+                    return;
+                }
+
+                data.loans.forEach(loan => {
+                    let badgeClass = 'badge-warning'; // pending
+                    if (loan.status === 'Approved') badgeClass = 'badge-success';
+                    if (loan.status === 'Rejected') badgeClass = 'badge-danger';
+
+                    const d = new Date(loan.date);
+                    const formattedDate = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    
+                    const userName = loan.userId ? loan.userId.name : 'Unknown User';
+                    const userIdStr = loan.userId ? loan.userId._id : '';
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td style="font-size:0.85rem;">${formattedDate}</td>
+                            <td style="font-weight:600;">${userName}</td>
+                            <td>${loan.loanType}</td>
+                            <td style="font-weight:600;">₹${loan.amount.toFixed(2)}</td>
+                            <td>
+                                <span class="badge-status ${badgeClass}">${loan.status}</span>
+                            </td>
+                            <td>
+                                ${loan.status === 'Pending' ? `
+                                    <button onclick="updateLoanStatus('${loan._id}', 'Approved', '${userIdStr}', ${loan.amount})" class="btn" style="background:var(--success); color:white; padding:4px 8px; font-size:0.8rem; border:none; margin-right:8px;">Approve</button>
+                                    <button onclick="updateLoanStatus('${loan._id}', 'Rejected', '${userIdStr}', ${loan.amount})" class="btn" style="background:var(--danger); color:white; padding:4px 8px; font-size:0.8rem; border:none;">Reject</button>
+                                ` : ''}
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {
+                console.error("Failed to load loans:", err);
+            }
+        }
+
+        async function updateLoanStatus(loanId, status, userId, amount) {
+            if (!confirm(`Are you sure you want to mark this loan as ${status}?`)) return;
+
+            try {
+                const res = await fetch(`http://localhost:5000/api/loans/${loanId}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status })
+                });
+
+                if (res.ok) {
+                    // Update user balance locally if approved
+                    if (status === 'Approved') {
+                        let users = JSON.parse(localStorage.getItem('nexusUsers')) || [];
+                        const userIndex = users.findIndex(u => u.id === userId);
+                        if (userIndex > -1) {
+                            users[userIndex].balance += Number(amount);
+                            // Add transaction record
+                            users[userIndex].transactions.unshift({
+                                id: 'TX' + Date.now() + 'LN',
+                                date: new Date().toISOString(),
+                                description: 'Loan Disbursement',
+                                type: 'CREDIT',
+                                amount: Number(amount)
+                            });
+                            localStorage.setItem('nexusUsers', JSON.stringify(users));
+                        }
+                    }
+                    alert(`Loan ${status} successfully!`);
+                    loadAdminData(); // Refresh UI
+                } else {
+                    alert("Failed to update loan status.");
+                }
+            } catch (err) {
+                alert("Server error. Please try again later.");
+            }
         }
 
         function toggleBlockUser(id) {

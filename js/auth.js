@@ -58,6 +58,57 @@ async function handleRegistration(e){
 }
 
 /* ===============================
+   FORGOT PASSWORD
+================================ */
+
+async function handleForgotPassword(e) {
+  e.preventDefault();
+
+  const email = document.getElementById("forgotEmail").value.trim();
+  const newPassword = document.getElementById("forgotNewPassword").value;
+  const confirmPassword = document.getElementById("forgotConfirmPassword").value;
+  const errorDiv = document.getElementById("forgotError");
+  const successDiv = document.getElementById("forgotSuccess");
+
+  errorDiv.style.display = "none";
+  successDiv.style.display = "none";
+
+  if (!email || !newPassword || !confirmPassword) {
+    showError(errorDiv, "All fields are required.");
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    showError(errorDiv, "Passwords do not match.");
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/forgot-password`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email, newPassword })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      successDiv.innerText = "Password reset successfully. Redirecting to login...";
+      successDiv.style.display = "block";
+      setTimeout(() => {
+        window.location.href = "login.html";
+      }, 2000);
+    } else {
+      showError(errorDiv, data.message || "Failed to reset password.");
+    }
+  } catch (error) {
+    showError(errorDiv, "Server error. Please try again later.");
+  }
+}
+
+/* ===============================
    LOGIN WITH PASSWORD
 ================================ */
 
