@@ -81,6 +81,19 @@ router.post("/deposit", verifyUser, async (req, res, next) => {
       return res.status(400).json({ message: "Please provide a valid deposit amount." });
     }
 
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const todayTransactionCount = await Transaction.countDocuments({
+      userId: req.user.id,
+      date: { $gte: startOfDay }
+    });
+
+    if (todayTransactionCount >= 20) {
+      return res.status(400).json({ message: "Daily limit of 20 transactions reached." });
+    }
+
     const user = await User.findById(req.user.id);
 
     if (!user) {
@@ -122,6 +135,19 @@ router.post("/withdraw", verifyUser, async (req, res, next) => {
       Number(amount) <= 0
     ) {
       return res.status(400).json({ message: "Please provide a valid withdrawal amount." });
+    }
+
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const todayTransactionCount = await Transaction.countDocuments({
+      userId: req.user.id,
+      date: { $gte: startOfDay }
+    });
+
+    if (todayTransactionCount >= 20) {
+      return res.status(400).json({ message: "Daily limit of 20 transactions reached." });
     }
 
     const user = await User.findById(req.user.id);
@@ -173,6 +199,28 @@ router.post("/transfer", verifyUser, async (req, res, next) => {
       Number(amount) <= 0
     ) {
       return res.status(400).json({ message: "Please provide a valid transfer amount." });
+    }
+
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const todayTransactions = await Transaction.find({
+      userId: req.user.id,
+      date: { $gte: startOfDay }
+    });
+
+    if (todayTransactions.length >= 20) {
+      return res.status(400).json({ message: "Daily limit of 20 transactions reached." });
+    }
+
+    const totalTransferredToday = todayTransactions
+      .filter(tx => tx.type === "transfer" || tx.type === "withdraw") // Consider all debit types or just transfer
+      .reduce((sum, tx) => sum + tx.amount, 0);
+
+    // Limit 3: max 100000 total transfer per day
+    if (totalTransferredToday + Number(amount) > 100000) {
+      return res.status(400).json({ message: `Maximum total transfer per day (₹100,000) exceeded. Remaining limit: ₹${(100000 - totalTransferredToday).toFixed(2)}` });
     }
 
     const sender = await User.findById(req.user.id);

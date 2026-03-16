@@ -230,8 +230,37 @@ function setupTransferLogic() {
         const amount = parseFloat(document.getElementById('transAmount').value);
         const desc = document.getElementById('transDesc').value || 'UPI Transfer';
 
+
         if (amount > currentUser.balance) {
             errorDiv.innerText = "Insufficient balance.";
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        // daily limits validation
+        const todayStr = new Date().toISOString().split('T')[0];
+        let todayCount = 0;
+        let todayTransferTotal = 0;
+        
+        currentUser.transactions.forEach(tx => {
+            if (tx.date.startsWith(todayStr)) {
+                todayCount++;
+                if (tx.type === 'DEBIT') { // assumption: all DEBITS are transfers/payments
+                    todayTransferTotal += tx.amount;
+                }
+            }
+        });
+
+        // Limit 2: max 20 per day
+        if (todayCount >= 20) {
+            errorDiv.innerText = "Daily limit of 20 transactions reached.";
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        // Limit 3: max 100000 total per day
+        if (todayTransferTotal + amount > 100000) {
+            errorDiv.innerText = `Maximum total transfer per day (₹100,000) exceeded. You can only transfer up to ₹${(100000 - todayTransferTotal).toFixed(2)} more today.`;
             errorDiv.style.display = 'block';
             return;
         }
@@ -350,6 +379,35 @@ function setupQRPayLogic() {
 
         if (amount > currentUser.balance) {
             msg.innerText = "Insufficient balance.";
+            msg.style.color = "var(--danger)";
+            return;
+        }
+
+
+        // daily limits validation
+        const todayStr = new Date().toISOString().split('T')[0];
+        let todayCount = 0;
+        let todayTransferTotal = 0;
+        
+        currentUser.transactions.forEach(tx => {
+            if (tx.date.startsWith(todayStr)) {
+                todayCount++;
+                if (tx.type === 'DEBIT') { 
+                    todayTransferTotal += tx.amount;
+                }
+            }
+        });
+
+        // Limit 2: max 20 per day
+        if (todayCount >= 20) {
+            msg.innerText = "Daily limit of 20 transactions reached.";
+            msg.style.color = "var(--danger)";
+            return;
+        }
+
+        // Limit 3: max 100000 total per day
+        if (todayTransferTotal + amount > 100000) {
+            msg.innerText = `Maximum total transfer per day (₹100,000) exceeded. Remaining limit: ₹${(100000 - todayTransferTotal).toFixed(2)}`;
             msg.style.color = "var(--danger)";
             return;
         }
