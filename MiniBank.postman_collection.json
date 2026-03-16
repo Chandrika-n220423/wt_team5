@@ -1,0 +1,245 @@
+{
+  "info": {
+    "name": "Mini Digital Banking",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "akhil-mini-bank-001"
+  },
+  "item": [
+    {
+      "name": "Register User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Akhil\",\n  \"email\": \"akhil@gmail.com\",\n  \"phone\": \"9876543210\",\n  \"balance\": 1000,\n  \"password\": \"123456\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/register",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api","register"]
+        }
+      }
+    },
+    {
+      "name": "Login User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"akhil@gmail.com\",\n  \"password\": \"123456\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/login",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api","login"]
+        }
+      }
+    },
+    {
+      "name": "Get Profile",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{USER_TOKEN}}"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/profile",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api","profile"]
+        }
+      }
+    },
+    {
+      "name": "Deposit Money",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{USER_TOKEN}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"amount\": 500\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/deposit",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api","deposit"]
+        }
+      }
+    },
+    {
+      "name": "Withdraw Money",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{USER_TOKEN}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"amount\": 200\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/withdraw",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api","withdraw"]
+        }
+      }
+    },
+    {
+      "name": "Transfer Money",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{USER_TOKEN}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"amount\": 300,\n  \"toEmail\": \"ravi@gmail.com\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/transfer",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api","transfer"]
+        }
+      }
+    },
+    {
+      "name": "Get Transactions",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{USER_TOKEN}}"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/transactions",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api","transactions"]
+        }
+      }
+    },
+    {
+      "name": "Admin Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@gmail.com\",\n  \"password\": \"admin123\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/admin/login",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api","admin","login"]
+        }
+      }
+    },
+    {
+      "name": "Admin - List Users",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/admin/users",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api","admin","users"]
+        }
+      }
+    },
+    {
+      "name": "Admin - List Transactions",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/admin/transactions",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api","admin","transactions"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "USER_TOKEN",
+      "value": ""
+    },
+    {
+      "key": "ADMIN_TOKEN",
+      "value": ""
+    }
+  ]
+}

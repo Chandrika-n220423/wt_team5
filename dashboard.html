@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | NexusBank</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+
+<body>
+    <!-- Auth Check -->
+    <script src="js/auth.js"></script>
+    <script>const currentUserId = requireAuth();</script>
+
+    <div class="dashboard-layout">
+        <!-- Floating Background Items -->
+        <div class="bg-floating-items">
+            <i class="fas fa-dollar-sign floating-icon"></i>
+            <i class="fas fa-coins floating-icon"></i>
+            <i class="fas fa-money-bill-wave floating-icon"></i>
+            <i class="fas fa-piggy-bank floating-icon"></i>
+            <i class="fas fa-chart-line floating-icon"></i>
+        </div>
+
+        <!-- Sidebar Overlay (Mobile) -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="#" class="sidebar-logo">
+                    <i class="fas fa-university icon-primary"></i>
+                    <span>NexusBank</span>
+                </a>
+                <button class="close-sidebar-btn" id="closeSidebarBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-target="view-dashboard">
+                    <i class="fas fa-home"></i>Dashboard
+                </a>
+                <a href="#" class="nav-item" data-target="view-profile">
+                    <i class="fas fa-user"></i>Profile
+                </a>
+                <a href="#" class="nav-item" data-target="view-transfer">
+                    <i class="fas fa-exchange-alt"></i>Transfer Money
+                </a>
+                <a href="#" class="nav-item" data-target="view-qr">
+                    <i class="fas fa-qrcode"></i>QR Payment
+                </a>
+                <a href="#" class="nav-item" data-target="view-statements">
+                    <i class="fas fa-file-invoice-dollar"></i>Statements
+                </a>
+                <a href="#" class="nav-item" data-target="view-history">
+                    <i class="fas fa-history"></i>Transactions
+                </a>
+                <a href="#" class="nav-item" data-target="view-analytics">
+                    <i class="fas fa-chart-pie"></i>Analytics
+                </a>
+                <a href="#" class="nav-item" data-target="view-loan">
+                    <i class="fas fa-hand-holding-usd"></i>Loans
+                </a>
+                <a href="#" class="nav-item" data-target="view-notifications">
+                    <i class="fas fa-bell"></i>Notifications <span id="notificationBadge"
+                        style="background:var(--danger);color:white;border-radius:50%;padding:2px 6px;font-size:0.7rem;margin-left:auto;display:none;">0</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="#" class="nav-item" onclick="logout()" style="color: var(--danger)">
+                    <i class="fas fa-sign-out-alt" style="color: var(--danger)"></i>Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content" id="mainContent">
+
+            <!-- Topbar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="hamburger-btn" id="sidebarToggleBtn">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+                <div class="topbar-right">
+                    <button id="themeToggleBtn" class="btn btn-outline" style="border:none; font-size: 1.2rem; padding: 0; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 8px; background-color: var(--bg-main);">
+                        <i class="fas fa-moon" id="themeIcon"></i>
+                    </button>
+                    <div class="user-profile-sm"
+                        onclick="document.querySelector('[data-target=\'view-profile\']').click()">
+                        <div class="avatar" id="topbarAvatar">U</div>
+                        <span id="topbarName" style="font-weight: 500;">User</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dynamic Views Container -->
+            <div class="view-container">
+
+                <!-- 1. Dashboard View -->
+                <section id="view-dashboard" class="view-section active">
+                    <div class="page-header">
+                        <h1>Welcome back, <span id="dashWaveName"></span>! 👋</h1>
+                        <p>Here's what's happening with your accounts today.</p>
+                    </div>
+
+                    <div class="cards-row">
+                        <div class="dashboard-card balance-card">
+                            <div class="card-title">Available Balance</div>
+                            <div class="card-value" id="dashBalance">₹0.00</div>
+                            <div class="card-actions">
+                                <button class="btn btn-outline"
+                                    style="background:rgba(255,255,255,0.2);color:white;border:none;"
+                                    onclick="document.querySelector('[data-target=\'view-transfer\']').click()">Send</button>
+                                <button class="btn btn-outline"
+                                    style="background:rgba(255,255,255,0.2);color:white;border:none;"
+                                    onclick="document.querySelector('[data-target=\'view-qr\']').click()">Receive</button>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-card">
+                            <div class="card-title">Quick Actions</div>
+                            <div class="quick-actions-grid">
+                                <button class="action-btn"
+                                    onclick="document.querySelector('[data-target=\'view-transfer\']').click()">
+                                    <div class="icon-bg"><i class="fas fa-paper-plane"></i></div>
+                                    <span>UPI</span>
+                                </button>
+                                <button class="action-btn"
+                                    onclick="document.querySelector('[data-target=\'view-qr\']').click()">
+                                    <div class="icon-bg"><i class="fas fa-qrcode"></i></div>
+                                    <span>Scan QR</span>
+                                </button>
+                                <button class="action-btn"
+                                    onclick="document.querySelector('[data-target=\'view-statements\']').click()">
+                                    <div class="icon-bg"><i class="fas fa-file-download"></i></div>
+                                    <span>Statement</span>
+                                </button>
+                                <button class="action-btn"
+                                    onclick="document.querySelector('[data-target=\'view-analytics\']').click()">
+                                    <div class="icon-bg"><i class="fas fa-chart-line"></i></div>
+                                    <span>Analytics</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card table-container" style="padding: 0;">
+                        <div
+                            style="padding: 24px; border-bottom: 1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+                            <h3 style="margin:0;">Recent Transactions</h3>
+                            <a href="#" onclick="document.querySelector('[data-target=\'view-history\']').click()">View
+                                All</a>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentTxTableBody">
+                                <!-- Populated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- 2. Profile View -->
+                <section id="view-profile" class="view-section">
+                    <div class="page-header">
+                        <h1>Profile Management</h1>
+                    </div>
+                    <div class="form-panel">
+                        <div style="text-align:center; margin-bottom: 32px;">
+                            <div class="avatar" id="profileAvatarBig"
+                                style="width:100px; height:100px; font-size: 2rem; margin: 0 auto 16px;">U</div>
+                            <input type="file" id="profilePicInput" accept="image/*" style="display:none;">
+                            <button class="btn btn-outline"
+                                onclick="document.getElementById('profilePicInput').click()">Change Picture</button>
+                        </div>
+
+                        <form id="profileForm">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label">Full Name</label>
+                                    <input type="text" id="profName" class="form-control" required>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label">Phone Number</label>
+                                    <input type="tel" id="profPhone" class="form-control" required>
+                                </div>
+                                <div class="form-group" style="grid-column: 1 / -1; margin-bottom: 0;">
+                                    <label class="form-label">Email Address</label>
+                                    <input type="email" id="profEmail" class="form-control" disabled
+                                        style="background:#f0f0f0; cursor:not-allowed;">
+                                </div>
+                            </div>
+                            <div id="profMessage"
+                                style="color:var(--success); margin-bottom:16px; margin-top:20px; display:none;">Profile
+                                updated successfully!</div>
+                            <button type="submit" class="btn btn-primary" style="margin-top:20px;">Save Changes</button>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- 3. Transfer Money (UPI Style) View -->
+                <section id="view-transfer" class="view-section">
+                    <div class="page-header">
+                        <h1>Send Money (UPI)</h1>
+                        <p>Transfer instantly using recipient's phone number.</p>
+                    </div>
+                    <div class="form-panel">
+                        <form id="transferForm">
+                            <div class="form-group">
+                                <label class="form-label" style="text-align:left;">Receiver Phone Number</label>
+                                <div style="display:flex; gap:12px; align-items:stretch;">
+                                    <input type="tel" id="transPhone" class="form-control"
+                                        placeholder="Enter 10-digit number" required pattern="[0-9]{10}"
+                                        style="flex:1;">
+                                    <button type="button" class="btn btn-outline" id="verifyReceiverBtn"
+                                        style="white-space:nowrap; display:flex; align-items:center;">Verify</button>
+                                </div>
+                                <div id="receiverNameDisplay"
+                                    style="margin-top:8px; font-size:0.9rem; font-weight:600; color:var(--success); text-align:left;">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" style="text-align:left;">Amount (₹)</label>
+                                <input type="number" id="transAmount" class="form-control" placeholder="0.00" min="1"
+                                    required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" style="text-align:left;">Description (Optional)</label>
+                                <input type="text" id="transDesc" class="form-control" placeholder="What is this for?">
+                            </div>
+                            <div id="transError" class="error-message" style="margin-bottom:16px; display:none;"></div>
+                            <div id="transSuccess" style="color:var(--success); margin-bottom:16px; display:none;">
+                                Transfer successful!</div>
+
+                            <!-- Current Balance Display -->
+                            <div
+                                style="margin-bottom:20px; text-align:right; font-size:0.9rem; color:var(--text-light);">
+                                Available Balance: <strong style="color:var(--primary);"
+                                    id="transAvailableBal">₹0.00</strong>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-block" id="sendMoneyBtn" disabled>Send
+                                Money</button>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- 4. QR Payment View -->
+                <section id="view-qr" class="view-section">
+                    <div class="page-header">
+                        <h1>QR Code Payments</h1>
+                    </div>
+                    <div class="cards-row">
+                        <div class="dashboard-card" style="text-align:center;">
+                            <h3>My QR Code</h3>
+                            <p style="color:var(--text-light); margin-bottom:24px;">Show this to receive payments</p>
+                            <div id="myQRCode" style="display:flex; justify-content:center; margin-bottom:24px;"></div>
+                            <button class="btn btn-outline" onclick="downloadQR()">Download QR</button>
+                        </div>
+                        <div class="dashboard-card form-panel" style="margin:0; box-shadow:none;">
+                            <h3>Scan to Pay</h3>
+                            <p style="color:var(--text-light); margin-bottom:24px;">Simulate scanning a QR code ID</p>
+                            <form id="qrPayForm">
+                                <div class="form-group">
+                                    <label class="form-label" style="text-align:left;">Scanned ID String</label>
+                                    <input type="text" id="qrScannedId" class="form-control" placeholder="e.g. UX123456"
+                                        required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" style="text-align:left;">Amount (₹)</label>
+                                    <input type="number" id="qrAmount" class="form-control" required min="1">
+                                </div>
+                                <div id="qrMessage" style="margin-bottom:16px; font-weight:500;"></div>
+                                <button type="submit" class="btn btn-primary btn-block">Pay Now</button>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 5. Statements View -->
+                <section id="view-statements" class="view-section">
+                    <div class="page-header">
+                        <h1>Account Statements</h1>
+                        <p>Download your transaction history as PDF/CSV.</p>
+                    </div>
+                    <div class="form-panel">
+                        <div class="form-group">
+                            <label class="form-label">Statement Period</label>
+                            <select class="form-control" id="statementPeriod">
+                                <option value="current">Current Month</option>
+                                <option value="last">Last Month</option>
+                                <option value="3months">Last 3 Months</option>
+                                <option value="year">Year to Date</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Format</label>
+                            <div style="display:flex; gap:16px; margin-top:8px;">
+                                <label><input type="radio" name="format" value="pdf" checked> PDF format</label>
+                                <label><input type="radio" name="format" value="csv"> CSV format</label>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" onclick="simulateDownload()">Download Statement</button>
+                        <div id="downloadMsg" style="margin-top:16px; display:none; color:var(--success);">Statement
+                            generated successfully! Check your downloads.</div>
+                    </div>
+                </section>
+
+                <!-- 6. History View -->
+                <section id="view-history" class="view-section">
+                    <div class="page-header">
+                        <h1>Transaction History</h1>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Transaction ID</th>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fullHistoryTableBody">
+                                <!-- Populated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- 7. Analytics View -->
+                <section id="view-analytics" class="view-section">
+                    <div class="page-header">
+                        <h1>Spending Analytics</h1>
+                    </div>
+                    <div class="cards-row">
+                        <div class="dashboard-card" style="grid-column: span 2;">
+                            <h3>Income vs Expense</h3>
+                            <canvas id="balanceChart" height="100"></canvas>
+                        </div>
+                    </div>
+                    <div class="cards-row">
+                        <div class="dashboard-card" style="display: flex; flex-direction: column; align-items: center;">
+                            <h3 style="align-self: flex-start; width: 100%;">Transaction Types</h3>
+                            <div style="width: 300px; max-width: 100%; margin-top: 20px;">
+                                <canvas id="typeChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 8. Notifications View -->
+                <section id="view-notifications" class="view-section">
+                    <div class="page-header">
+                        <h1>Notifications</h1>
+                        <button class="btn btn-outline" onclick="markAllNotificationsRead()"
+                            style="float:right; margin-top:-40px;">Mark All Read</button>
+                    </div>
+                    <div id="notificationsContainer" style="display:flex; flex-direction:column; gap:16px;">
+                        <!-- Populated via JS -->
+                    </div>
+                </section>
+
+                <!-- 9. Loans View -->
+                <section id="view-loan" class="view-section">
+                    <div class="page-header">
+                        <h1>Loan Services</h1>
+                        <p>Apply for a loan and manage your existing ones.</p>
+                    </div>
+
+                    <div class="cards-row">
+                        <!-- Loan Application Form -->
+                        <div class="dashboard-card form-panel" style="margin:0;">
+                            <h3>Apply for a Loan</h3>
+                            <form id="loanForm">
+                                <div class="form-group">
+                                    <label class="form-label" style="text-align:left;">Loan Amount (₹)</label>
+                                    <input type="number" id="loanAmount" class="form-control" placeholder="0.00" min="1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" style="text-align:left;">Loan Type</label>
+                                    <select id="loanType" class="form-control" required>
+                                        <option value="" disabled selected>Select Loan Type</option>
+                                        <option value="Personal">Personal Loan</option>
+                                        <option value="Education">Education Loan</option>
+                                        <option value="Home">Home Loan</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" style="text-align:left;">Monthly Income (₹)</label>
+                                    <input type="number" id="loanIncome" class="form-control" placeholder="0.00" min="0" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" style="text-align:left;">Employment Type</label>
+                                    <select id="loanEmployment" class="form-control" required>
+                                        <option value="" disabled selected>Select Employment Type</option>
+                                        <option value="Salaried">Salaried</option>
+                                        <option value="Self-Employed">Self-Employed</option>
+                                        <option value="Unemployed">Unemployed</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" style="text-align:left;">Loan Duration</label>
+                                    <div style="display:flex; gap:12px;">
+                                        <input type="number" id="loanDurationValue" class="form-control" placeholder="e.g. 12" min="1" required style="flex:2;">
+                                        <select id="loanDurationUnit" class="form-control" style="flex:1;">
+                                            <option value="Months">Months</option>
+                                            <option value="Years">Years</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div id="loanMessage" style="margin-bottom:16px; font-weight:500;"></div>
+                                <button type="submit" class="btn btn-primary btn-block">Apply Loan</button>
+                            </form>
+                        </div>
+                        
+                        <!-- Right Column: EMI Calc & Status -->
+                        <div style="display:flex; flex-direction:column; gap:24px;">
+                            <!-- EMI Calculator -->
+                            <div class="dashboard-card form-panel" style="margin:0;">
+                                <h3>EMI Calculator</h3>
+                                <div class="form-group">
+                                    <label class="form-label" style="text-align:left;">Loan Amount (₹)</label>
+                                    <input type="number" id="emiAmount" class="form-control" placeholder="0.00" min="1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" style="text-align:left;">Interest Rate (% p.a.)</label>
+                                    <input type="number" id="emiRate" class="form-control" placeholder="e.g. 10.5" step="0.1" min="0.1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" style="text-align:left;">Duration (Months)</label>
+                                    <input type="number" id="emiDuration" class="form-control" placeholder="e.g. 24" min="1" required>
+                                </div>
+                                <button type="button" id="calcEmiBtn" class="btn btn-outline btn-block">Calculate EMI</button>
+                                <div id="emiResult" style="margin-top:16px; font-weight:600; font-size:1.1rem; color:var(--primary); text-align:center; display:none;">
+                                    EMI: ₹<span id="emiValue">0.00</span> / month
+                                </div>
+                            </div>
+                            
+                            <!-- Loan Status/Summary -->
+                            <div class="dashboard-card" style="margin:0;">
+                                <h3>Active Loan Status</h3>
+                                <div id="loanStatusDisplay" style="margin-top:16px;">
+                                    <p style="color:var(--text-light); text-align:center;">No active loans found.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card table-container" style="margin-top:24px;">
+                        <div style="padding: 24px; border-bottom: 1px solid var(--border-color);">
+                            <h3 style="margin:0;">Loan History</h3>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Loan Type</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="loanHistoryTableBody">
+                                <!-- Populated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>
