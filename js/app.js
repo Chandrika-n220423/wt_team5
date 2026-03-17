@@ -44,6 +44,7 @@ function loadUserData() {
     updateNotificationsBadge();
     populateNotifications();
     setupCharts();
+    populateLoans();
 
     // Generate QR
     generateMyQR();
@@ -167,6 +168,9 @@ function setupForms() {
 
     // QR Pay logic
     setupQRPayLogic();
+
+    // Loan logic
+    setupLoanLogic();
 }
 
 /**
@@ -359,6 +363,123 @@ function setupQRPayLogic() {
         }, 3000);
         document.getElementById('qrPayForm').reset();
     });
+}
+
+/**
+ * Sub-Feature: Loans
+ */
+function populateLoans() {
+    if (!currentUser.loans) currentUser.loans = [];
+    
+    // Populate Status
+    const statusDisp = document.getElementById('loanStatusDisplay');
+    const activeLoan = currentUser.loans.find(l => l.status === 'Pending' || l.status === 'Approved');
+    
+    if (activeLoan) {
+        statusDisp.innerHTML = `
+            <div style="padding:16px; background:var(--bg-card); border-radius:8px; text-align:center; border: 1px solid var(--border-color);">
+                <h4 style="margin-bottom:8px;">${activeLoan.loanType} Loan</h4>
+                <div style="font-size:1.5rem; font-weight:700; color:var(--text-main); margin-bottom:8px;">${formatMoney(activeLoan.amount)}</div>
+                <span class="badge-status ${activeLoan.status === 'Approved' ? 'badge-success' : 'badge-warning'}">${activeLoan.status}</span>
+                <p style="margin-top:12px; font-size:0.9rem; color:var(--text-light);">Applied on: ${formatDateLong(activeLoan.date)}</p>
+            </div>
+        `;
+    } else {
+        statusDisp.innerHTML = `<p style="color:var(--text-light); text-align:center;">No active loans found.</p>`;
+    }
+
+    // Populate History Table
+    const tbody = document.getElementById('loanHistoryTableBody');
+    tbody.innerHTML = '';
+    
+    if (currentUser.loans.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-light);">No loan history</td></tr>`;
+        return;
+    }
+    
+    currentUser.loans.forEach(loan => {
+        let badgeClass = 'badge-danger';
+        if (loan.status === 'Approved') badgeClass = 'badge-success';
+        if (loan.status === 'Pending') badgeClass = 'badge-warning';
+
+        tbody.innerHTML += `
+            <tr>
+                <td style="color:var(--text-light);">${formatDate(loan.date)}</td>
+                <td><strong>${loan.loanType}</strong></td>
+                <td style="font-weight:600;">${formatMoney(loan.amount)}</td>
+                <td><span class="badge-status ${badgeClass}">${loan.status}</span></td>
+            </tr>
+        `;
+    });
+}
+
+function setupLoanLogic() {
+    // EMI Calculator
+    const calcEmiBtn = document.getElementById('calcEmiBtn');
+    if (calcEmiBtn) {
+        calcEmiBtn.addEventListener('click', () => {
+            const amount = parseFloat(document.getElementById('emiAmount').value);
+            const rate = parseFloat(document.getElementById('emiRate').value);
+            const duration = parseInt(document.getElementById('emiDuration').value);
+            
+            if (!amount || !rate || !duration) return;
+            
+            const r = rate / (12 * 100);
+            const emi = (amount * r * Math.pow(1 + r, duration)) / (Math.pow(1 + r, duration) - 1);
+            
+            document.getElementById('emiValue').innerText = emi.toFixed(2);
+            document.getElementById('emiResult').style.display = 'block';
+        });
+    }
+
+    // Loan Form Submission
+    const loanForm = document.getElementById('loanForm');
+    if (loanForm) {
+        loanForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const amount = parseFloat(document.getElementById('loanAmount').value);
+            const type = document.getElementById('loanType').value;
+            const income = parseFloat(document.getElementById('loanIncome').value);
+            const empType = document.getElementById('loanEmployment').value;
+            const durValue = parseInt(document.getElementById('loanDurationValue').value);
+            const durUnit = document.getElementById('loanDurationUnit').value;
+            
+            const durationMonths = durUnit === 'Years' ? durValue * 12 : durValue;
+            
+            const newLoan = {
+                id: 'LN' + Date.now(),
+                date: new Date().toISOString(),
+                amount: amount,
+                loanType: type,
+                income: income,
+                employmentType: empType,
+                durationMonths: durationMonths,
+                status: 'Pending'
+            };
+            
+            if (!currentUser.loans) currentUser.loans = [];
+            currentUser.loans.unshift(newLoan);
+            
+            // Add Notification
+            addNotification(currentUser, `Loan application for ${formatMoney(amount)} submitted.`);
+            
+            saveUserData();
+            loadUserData(); // refresh UI
+            
+            const msg = document.getElementById('loanMessage');
+            msg.innerText = "Loan application submitted successfully!";
+            msg.style.color = "var(--success)";
+            msg.classList.add('success-pop-anim');
+            
+            document.getElementById('loanForm').reset();
+            
+            setTimeout(() => {
+                msg.innerText = '';
+                msg.classList.remove('success-pop-anim');
+            }, 3000);
+        });
+    }
 }
 
 /**

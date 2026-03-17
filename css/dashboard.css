@@ -412,6 +412,7 @@
 
 .badge-success { background-color: rgba(52, 199, 89, 0.1); color: var(--success); }
 .badge-danger { background-color: rgba(255, 59, 48, 0.1); color: var(--danger); }
+.badge-warning { background-color: rgba(255, 149, 0, 0.1); color: #ff9500; }
 
 /* ==========================================================================
    Responsive Main Layout

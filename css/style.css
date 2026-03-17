@@ -856,4 +856,5 @@ body.dark-mode .action-btn .icon-bg {
 
 body.dark-mode .badge-success { background-color: rgba(74, 222, 128, 0.1); color: var(--accent); }
 body.dark-mode .badge-danger { background-color: rgba(248, 113, 113, 0.1); color: var(--danger); }
+body.dark-mode .badge-warning { background-color: rgba(251, 191, 36, 0.1); color: #fbbf24; }
 body.dark-mode .error-message { color: #f87171; }
