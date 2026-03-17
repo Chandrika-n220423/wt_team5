@@ -132,21 +132,71 @@ function setupSidebarToggle() {
  * Sub-Feature: Profiles
  */
 function populateProfileForm() {
-    document.getElementById('profName').value = currentUser.name;
-    document.getElementById('profEmail').value = currentUser.email;
-    document.getElementById('profPhone').value = currentUser.phone;
+    document.getElementById('profName').value = currentUser.name || '';
+    document.getElementById('profEmail').value = currentUser.email || '';
+    document.getElementById('profPhone').value = currentUser.phone || '';
+    
+    // New fields
+    if(document.getElementById('profDob')) {
+        // format date for date input "YYYY-MM-DD"
+        if(currentUser.dob) {
+            try {
+                const dateObj = new Date(currentUser.dob);
+                document.getElementById('profDob').value = dateObj.toISOString().split('T')[0];
+            } catch(e) {
+                document.getElementById('profDob').value = currentUser.dob.split('T')[0];
+            }
+        }
+    }
+    if(document.getElementById('profGender')) document.getElementById('profGender').value = currentUser.gender || '';
+    if(document.getElementById('profAccount')) document.getElementById('profAccount').value = currentUser.accountNumber || '';
+    if(document.getElementById('profAadhaar')) document.getElementById('profAadhaar').value = currentUser.aadhaarNumber || '';
 }
 
 function setupForms() {
     // Profile Edit
-    document.getElementById('profileForm').addEventListener('submit', (e) => {
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         currentUser.name = document.getElementById('profName').value;
         currentUser.phone = document.getElementById('profPhone').value;
-        saveUserData();
-        loadUserData();
+        currentUser.dob = document.getElementById('profDob').value;
+        currentUser.gender = document.getElementById('profGender').value;
+        
+        saveUserData(); // Will save to localStorage
 
         const msg = document.getElementById('profMessage');
+        const submitBtn = document.querySelector('#profileForm button[type="submit"]');
+        submitBtn.disabled = true;
+
+        try {
+            // Synchronize with the real backend 
+            const session = JSON.parse(localStorage.getItem('nexusSession'));
+            if(session && session.token) {
+                const response = await fetch('http://localhost:5000/api/users/profile', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.token}`
+                    },
+                    body: JSON.stringify({
+                        name: currentUser.name,
+                        phone: currentUser.phone,
+                        dob: currentUser.dob,
+                        gender: currentUser.gender
+                    })
+                });
+                
+                if(!response.ok) {
+                    console.error("Failed to sync profile with database");
+                }
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            submitBtn.disabled = false;
+        }
+
+        loadUserData();
         msg.style.display = 'block';
         setTimeout(() => msg.style.display = 'none', 3000);
     });
@@ -597,7 +647,7 @@ function populateRecentTransactions() {
     const recent = currentUser.transactions.slice(0, 5);
 
     if (recent.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-light);">No recent transactions</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-light);">No recent transactions</td></tr>`;
         return;
     }
 
@@ -605,12 +655,14 @@ function populateRecentTransactions() {
         const isCredit = tx.type === 'CREDIT';
         const amountStr = isCredit ? `+${formatMoney(tx.amount)}` : `-${formatMoney(tx.amount)}`;
         const amountColor = isCredit ? 'var(--success)' : 'var(--text-main)';
+        const paymentTypeStr = tx.paymentType || 'UPI';
 
         tbody.innerHTML += `
             <tr>
                 <td style="color:var(--text-light);">${formatDate(tx.date)}</td>
                 <td><strong>${tx.description}</strong></td>
                 <td><span class="badge-status ${isCredit ? 'badge-success' : 'badge-danger'}">${tx.type}</span></td>
+                <td><span class="badge-status badge-warning">${paymentTypeStr}</span></td>
                 <td style="font-weight:600; color:${amountColor};">${amountStr}</td>
             </tr>
         `;
@@ -622,12 +674,13 @@ function populateFullHistory() {
     tbody.innerHTML = '';
 
     if (currentUser.transactions.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-light);">No transaction history</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-light);">No transaction history</td></tr>`;
         return;
     }
 
     currentUser.transactions.forEach(tx => {
         const isCredit = tx.type === 'CREDIT';
+        const paymentTypeStr = tx.paymentType || 'UPI';
 
         tbody.innerHTML += `
             <tr>
@@ -635,6 +688,7 @@ function populateFullHistory() {
                 <td>${formatDateLong(tx.date)}</td>
                 <td>${tx.description}</td>
                 <td><span class="badge-status ${isCredit ? 'badge-success' : 'badge-danger'}">${tx.type}</span></td>
+                <td><span class="badge-status badge-warning">${paymentTypeStr}</span></td>
                 <td style="font-weight:600; color:${isCredit ? 'var(--success)' : 'var(--text-main)'};">
                     ${isCredit ? '+' : '-'}${formatMoney(tx.amount)}
                 </td>
@@ -646,20 +700,53 @@ function populateFullHistory() {
 /**
  * Sub-Feature: Statements
  */
-function simulateDownload() {
-    document.getElementById('downloadMsg').style.display = 'block';
-    setTimeout(() => {
-        document.getElementById('downloadMsg').style.display = 'none';
+async function simulateDownload() {
+    const msg = document.getElementById('downloadMsg');
+    const format = document.querySelector('input[name="format"]:checked').value;
+    
+    msg.innerText = "Generating statement...";
+    msg.style.display = 'block';
+    msg.style.color = "var(--text-light)";
 
-        // Simulating actual download by creating empty blob based on format
-        const format = document.querySelector('input[name="format"]:checked').value;
-        const blob = new Blob(["Simulated Document content"], { type: "text/plain" });
+    try {
+        const session = JSON.parse(localStorage.getItem('nexusSession'));
+        if(!session || !session.token) {
+            throw new Error("You must be logged in to download a statement.");
+        }
+
+        const endpoint = format === 'pdf' ? '/api/users/export/pdf' : '/api/users/export/csv';
+        const response = await fetch(`http://localhost:5000${endpoint}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${session.token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ transactions: currentUser.transactions })
+        });
+
+        if(!response.ok) {
+            throw new Error("Failed to generate statement from server.");
+        }
+
+        const blob = await response.blob();
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `nexus_statement_${Date.now()}.${format}`;
+        a.download = `nexus_statement_${format}_${Date.now()}.${format}`;
         a.click();
-    }, 1500);
+        URL.revokeObjectURL(url);
+
+        msg.style.color = "var(--success)";
+        msg.innerText = "Statement generated successfully! Check your downloads.";
+    } catch (err) {
+        msg.style.color = "var(--danger)";
+        msg.innerText = err.message;
+    }
+
+    setTimeout(() => {
+        msg.style.display = 'none';
+        msg.innerText = "";
+    }, 4000);
 }
 
 /**

@@ -66,6 +66,41 @@ router.get("/profile", verifyUser, async (req, res, next) => {
   }
 });
 
+router.put("/profile", verifyUser, async (req, res, next) => {
+  try {
+    const { name, phone, dob, gender } = req.body;
+    const user = await User.findById(req.user.id);
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    if (name) user.name = name;
+    if (phone) user.phone = phone;
+    if (dob) user.dob = dob;
+    if (gender) user.gender = gender;
+
+    await user.save();
+
+    res.json({
+      message: "Profile updated successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        balance: user.balance,
+        dob: user.dob,
+        aadhaarNumber: user.aadhaarNumber,
+        gender: user.gender,
+        accountNumber: user.accountNumber
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 /* ================= DEPOSIT ================= */
 router.post("/deposit", verifyUser, async (req, res, next) => {
   try {
@@ -186,7 +221,7 @@ router.post("/withdraw", verifyUser, async (req, res, next) => {
 router.post("/transfer", verifyUser, async (req, res, next) => {
   try {
 
-    const { toEmail, amount } = req.body;
+    const { toEmail, amount, paymentType } = req.body;
 
     if (!toEmail) {
       return res.status(400).json({ message: "Receiver email is required." });
@@ -200,6 +235,8 @@ router.post("/transfer", verifyUser, async (req, res, next) => {
     ) {
       return res.status(400).json({ message: "Please provide a valid transfer amount." });
     }
+
+    const typeOfPayment = paymentType || "None"; // fallback to None if not provided
 
 
     const startOfDay = new Date();
@@ -250,6 +287,7 @@ router.post("/transfer", verifyUser, async (req, res, next) => {
     const transaction = new Transaction({
       userId: sender._id,
       type: "transfer",
+      paymentType: typeOfPayment,
       amount: Number(amount),
       receiverId: receiver._id
     });
@@ -282,6 +320,108 @@ router.get("/transactions", verifyUser, async (req, res, next) => {
       .populate("receiverId", "name email");
 
     res.json({ transactions });
+
+  } catch (error) {
+    next(error);
+  }
+});
+
+/* ================= EXPORTS ================= */
+const { Parser } = require("json2csv");
+const PDFDocument = require("pdfkit");
+
+// POST /export/csv - User transaction export
+router.post("/export/csv", verifyUser, async (req, res, next) => {
+  try {
+    let rawTransactions = req.body.transactions;
+    
+    if (!rawTransactions) {
+      const dbTx = await Transaction.find({
+        $or: [{ userId: req.user.id }, { receiverId: req.user.id }]
+      }).sort({ date: -1 }).populate("userId", "name email").populate("receiverId", "name email");
+      
+      rawTransactions = dbTx.map(tx => {
+        let isCredit = (tx.receiverId && tx.receiverId._id.toString() === req.user.id) || (tx.type === 'deposit');
+        return {
+          id: tx._id.toString(),
+          date: tx.date,
+          type: tx.type,
+          description: (tx.type === 'transfer' ? (isCredit ? `From ${tx.userId.name}` : `To ${tx.receiverId.name}`) : tx.type),
+          paymentType: tx.paymentType,
+          amount: (isCredit ? '+' : '-') + tx.amount,
+        };
+      });
+    }
+
+    const fields = ['ID', 'Date', 'Type', 'Description', 'Method', 'Amount'];
+    const data = rawTransactions.map(tx => {
+      return {
+        'ID': tx.id,
+        'Date': new Date(tx.date).toLocaleString(),
+        'Type': tx.type,
+        'Description': tx.description,
+        'Method': tx.paymentType || 'None',
+        'Amount': tx.amount,
+      };
+    });
+
+    const json2csvParser = new Parser({ fields });
+    const csv = json2csvParser.parse(data);
+
+    res.header("Content-Type", "text/csv");
+    res.attachment("transactions.csv");
+    return res.send(csv);
+
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /export/pdf - User transaction export
+router.post("/export/pdf", verifyUser, async (req, res, next) => {
+  try {
+    let rawTransactions = req.body.transactions;
+    
+    if (!rawTransactions) {
+      const dbTx = await Transaction.find({
+        $or: [{ userId: req.user.id }, { receiverId: req.user.id }]
+      }).sort({ date: -1 }).populate("userId", "name email").populate("receiverId", "name email");
+      
+      rawTransactions = dbTx.map(tx => {
+        let isCredit = (tx.receiverId && tx.receiverId._id.toString() === req.user.id) || (tx.type === 'deposit');
+        return {
+          id: tx._id.toString(),
+          date: tx.date,
+          type: tx.type,
+          description: (tx.type === 'transfer' ? (isCredit ? `From ${tx.userId.name}` : `To ${tx.receiverId.name}`) : tx.type),
+          paymentType: tx.paymentType,
+          amount: (isCredit ? '+' : '-') + tx.amount,
+        };
+      });
+    }
+
+    const doc = new PDFDocument();
+    
+    res.setHeader('Content-disposition', 'attachment; filename="transactions.pdf"');
+    res.setHeader('Content-type', 'application/pdf');
+    doc.pipe(res);
+
+    doc.fontSize(20).text('Transaction History', { align: 'center' });
+    doc.moveDown();
+
+    rawTransactions.forEach(tx => {
+      doc.fontSize(12).text(`Date: ${new Date(tx.date).toLocaleString()}`);
+      doc.text(`ID: ${tx.id}`);
+      doc.text(`Type: ${tx.type.toUpperCase()}`);
+      doc.text(`Method: ${tx.paymentType || 'None'}`);
+      doc.text(`Description: ${tx.description}`);
+      doc.text(`Amount: INR ${tx.amount}`);
+      doc.moveDown();
+      doc.moveTo(doc.x, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).stroke();
+      doc.moveDown();
+    });
+
+    doc.end();
 
   } catch (error) {
     next(error);

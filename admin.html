@@ -68,6 +68,20 @@
                 </div>
             </div>
 
+            <!-- Global Actions -->
+            <div class="cards-row" style="margin-bottom: 32px;">
+                <div class="dashboard-card" style="text-align: center; padding: 24px;">
+                    <h3 style="margin-bottom:16px;">Export Transactions</h3>
+                    <button class="btn btn-outline" onclick="adminExportTransactions('csv')" style="margin-right:8px;">
+                        <i class="fas fa-file-csv"></i> Download CSV
+                    </button>
+                    <button class="btn btn-outline" onclick="adminExportTransactions('pdf')">
+                        <i class="fas fa-file-pdf"></i> Download PDF
+                    </button>
+                    <div id="adminExportMsg" style="margin-top:16px; color:var(--success); display:none;">Generating...</div>
+                </div>
+            </div>
+
             <!-- Loans Table -->
             <div class="dashboard-card table-container" style="padding:0; margin-bottom: 32px;">
                 <div style="padding: 24px 32px; border-bottom: 1px solid var(--border-color); background: #fafafa; border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
@@ -265,6 +279,64 @@
             } catch (err) {
                 alert("Server error. Please try again later.");
             }
+        }
+
+        async function adminExportTransactions(format) {
+            const msg = document.getElementById('adminExportMsg');
+            msg.style.display = 'block';
+            msg.style.color = 'var(--text-light)';
+            msg.innerText = 'Generating export...';
+
+            try {
+                // Ensure authentication token
+                const session = JSON.parse(localStorage.getItem('nexusSession')) || { token: '' };
+                
+                const endpoint = format === 'pdf' ? '/api/admin/export/pdf' : '/api/admin/export/csv';
+                
+                // Map all transactions
+                let users = JSON.parse(localStorage.getItem('nexusUsers')) || [];
+                let allTx = [];
+                users.forEach(u => {
+                    if (u.transactions) {
+                        u.transactions.forEach(tx => {
+                            allTx.push({
+                                id: tx.id || Date.now() + Math.random().toString(36).substr(2, 5),
+                                date: tx.date,
+                                type: tx.type,
+                                description: tx.description,
+                                paymentType: tx.paymentType,
+                                amount: tx.amount,
+                                sender: u.name,
+                                receiver: tx.counterparty || 'N/A'
+                            });
+                        });
+                    }
+                });
+
+                const res = await fetch(`http://localhost:5000${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${session.token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ transactions: allTx })
+                });
+
+                if(!res.ok) throw new Error("Export failed. You may not have Admin privileges.");
+
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `all_transactions_${format}_${Date.now()}.${format}`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                msg.style.color = 'var(--success)';
+                msg.innerText = 'Export generated successfully!';
+            } catch (err) {
+                msg.style.color = 'var(--danger)';
+                msg.innerText = err.message;
+            }
+
+            setTimeout(() => msg.style.display = 'none', 4000);
         }
 
         function toggleBlockUser(id) {

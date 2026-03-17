@@ -23,6 +23,9 @@ async function handleRegistration(e){
   const phone = document.getElementById("regPhone").value.trim();
   const balance = document.getElementById("regBalance").value;
   const password = document.getElementById("regPassword").value;
+  const dob = document.getElementById("regDob").value;
+  const aadhaarNumber = document.getElementById("regAadhaar").value.trim();
+  const gender = document.getElementById("regGender").value;
 
   try{
 
@@ -37,7 +40,10 @@ async function handleRegistration(e){
         email,
         phone,
         balance,
-        password
+        password,
+        dob,
+        aadhaarNumber,
+        gender
       })
 
     });
@@ -151,6 +157,10 @@ async function handleFinalLogin(e){
                      email: data.user.email,
                      phone: data.user.phone,
                      balance: data.user.balance || 0,
+                     dob: data.user.dob,
+                     aadhaarNumber: data.user.aadhaarNumber,
+                     gender: data.user.gender,
+                     accountNumber: data.user.accountNumber,
                      transactions: [],
                      notifications: []
                  });

@@ -85,4 +85,108 @@ router.get("/transactions", verifyAdmin, async (req, res, next) => {
   }
 });
 
+/* ================= EXPORTS ================= */
+const { Parser } = require("json2csv");
+const PDFDocument = require("pdfkit");
+
+// POST /export/csv - Admin transaction export
+router.post("/export/csv", verifyAdmin, async (req, res, next) => {
+  try {
+    let rawTransactions = req.body.transactions;
+
+    if (!rawTransactions) {
+      const dbTx = await Transaction.find()
+        .sort({ date: -1 })
+        .populate("userId", "name email")
+        .populate("receiverId", "name email");
+
+      rawTransactions = dbTx.map(tx => {
+        return {
+          id: tx._id.toString(),
+          date: tx.date,
+          type: tx.type,
+          sender: tx.userId ? tx.userId.name : 'N/A',
+          receiver: tx.receiverId ? tx.receiverId.name : 'N/A',
+          paymentType: tx.paymentType || 'None',
+          amount: tx.amount
+        };
+      });
+    }
+
+    const fields = ['ID', 'Date', 'Type', 'Sender', 'Receiver', 'Method', 'Amount'];
+    const data = rawTransactions.map(tx => {
+      return {
+        'ID': tx.id,
+        'Date': new Date(tx.date).toLocaleString(),
+        'Type': tx.type,
+        'Sender': tx.sender || 'N/A',
+        'Receiver': tx.receiver || 'N/A',
+        'Method': tx.paymentType || 'None',
+        'Amount': tx.amount,
+      };
+    });
+
+    const json2csvParser = new Parser({ fields });
+    const csv = json2csvParser.parse(data);
+
+    res.header("Content-Type", "text/csv");
+    res.attachment("all_transactions.csv");
+    return res.send(csv);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /export/pdf - Admin transaction export
+router.post("/export/pdf", verifyAdmin, async (req, res, next) => {
+  try {
+    let rawTransactions = req.body.transactions;
+
+    if (!rawTransactions) {
+      const dbTx = await Transaction.find()
+        .sort({ date: -1 })
+        .populate("userId", "name email")
+        .populate("receiverId", "name email");
+
+      rawTransactions = dbTx.map(tx => {
+        return {
+          id: tx._id.toString(),
+          date: tx.date,
+          type: tx.type,
+          sender: tx.userId ? tx.userId.name : 'N/A',
+          receiver: tx.receiverId ? tx.receiverId.name : 'N/A',
+          paymentType: tx.paymentType || 'None',
+          amount: tx.amount
+        };
+      });
+    }
+
+    const doc = new PDFDocument();
+    
+    res.setHeader('Content-disposition', 'attachment; filename="all_transactions.pdf"');
+    res.setHeader('Content-type', 'application/pdf');
+    doc.pipe(res);
+
+    doc.fontSize(20).text('System Transaction History', { align: 'center' });
+    doc.moveDown();
+
+    rawTransactions.forEach(tx => {
+      doc.fontSize(12).text(`Date: ${new Date(tx.date).toLocaleString()}`);
+      doc.text(`ID: ${tx.id}`);
+      doc.text(`Type: ${tx.type.toUpperCase()}`);
+      doc.text(`Method: ${tx.paymentType || 'None'}`);
+      doc.text(`Sender: ${tx.sender || 'N/A'}`);
+      if (tx.type === 'transfer' || tx.receiver) doc.text(`Receiver: ${tx.receiver || 'N/A'}`);
+      doc.text(`Amount: INR ${tx.amount}`);
+      doc.moveDown();
+      doc.moveTo(doc.x, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).stroke();
+      doc.moveDown();
+    });
+
+    doc.end();
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;

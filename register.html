@@ -40,6 +40,26 @@
                     </div>
 
                     <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" style="text-align:left;">Date of Birth</label>
+                        <input type="date" id="regDob" class="form-control" required>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" style="text-align:left;">Aadhaar Number</label>
+                        <input type="text" id="regAadhaar" class="form-control" placeholder="12-digit Aadhaar" pattern="[0-9]{12}" title="Must be exactly 12 digits" required maxlength="12">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" style="text-align:left;">Gender</label>
+                        <select id="regGender" class="form-control" required>
+                            <option value="" disabled selected>Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:0; grid-column: 1 / -1;">
                         <label class="form-label" style="text-align:left;">Initial Balance (₹)</label>
                         <input type="number" id="regBalance" class="form-control" placeholder="1000" min="0" required>
                     </div>

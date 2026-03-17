@@ -8,10 +8,14 @@ const router = express.Router();
 /* ================= REGISTER ================= */
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, phone, balance, password } = req.body;
+    const { name, email, phone, balance, password, dob, aadhaarNumber, gender } = req.body;
 
-    if (!name || !email || !phone || !password) {
+    if (!name || !email || !phone || !password || !dob || !aadhaarNumber || !gender) {
       return res.status(400).json({ message: "All fields are required" });
+    }
+
+    if (aadhaarNumber.length !== 12 || !/^\d+$/.test(aadhaarNumber)) {
+      return res.status(400).json({ message: "Aadhaar number must be exactly 12 digits" });
     }
 
     const existingUser = await User.findOne({ email });
@@ -19,6 +23,9 @@ router.post("/register", async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
+
+    // Generate unique 10-digit account number start with '10'
+    const accountNumber = "10" + Math.floor(10000000 + Math.random() * 90000000).toString();
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -28,13 +35,24 @@ router.post("/register", async (req, res) => {
       phone,
       balance,
       password: hashedPassword,
+      dob,
+      aadhaarNumber,
+      gender,
+      accountNumber
     });
 
     await user.save();
 
     res.json({
       message: "User registered successfully",
-      user,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        balance: user.balance,
+        accountNumber: user.accountNumber
+      },
     });
   } catch (error) {
     res.status(500).json({
@@ -80,6 +98,10 @@ router.post("/login", async (req, res) => {
         email: user.email,
         phone: user.phone,
         balance: user.balance,
+        dob: user.dob,
+        aadhaarNumber: user.aadhaarNumber,
+        gender: user.gender,
+        accountNumber: user.accountNumber
       },
     });
   } catch (error) {

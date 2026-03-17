@@ -16,6 +16,11 @@ const transactionSchema = new mongoose.Schema({
     required: true,
     min: 0
   },
+  paymentType: {
+    type: String,
+    enum: ["UPI", "QR", "None"],
+    default: "None"
+  },
   date: {
     type: Date,
     default: Date.now
