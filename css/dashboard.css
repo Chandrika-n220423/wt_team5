@@ -294,6 +294,8 @@
 .card-value {
     font-size: 2.25rem;
     font-weight: 700;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .balance-card .card-value {

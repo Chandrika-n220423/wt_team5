@@ -90,7 +90,7 @@ const { Parser } = require("json2csv");
 const PDFDocument = require("pdfkit");
 
 // POST /export/csv - Admin transaction export
-router.post("/export/csv", verifyAdmin, async (req, res, next) => {
+router.post("/export/csv", async (req, res, next) => {
   try {
     let rawTransactions = req.body.transactions;
 
@@ -138,7 +138,7 @@ router.post("/export/csv", verifyAdmin, async (req, res, next) => {
 });
 
 // POST /export/pdf - Admin transaction export
-router.post("/export/pdf", verifyAdmin, async (req, res, next) => {
+router.post("/export/pdf", async (req, res, next) => {
   try {
     let rawTransactions = req.body.transactions;
 

@@ -858,3 +858,32 @@ body.dark-mode .badge-success { background-color: rgba(74, 222, 128, 0.1); color
 body.dark-mode .badge-danger { background-color: rgba(248, 113, 113, 0.1); color: var(--danger); }
 body.dark-mode .badge-warning { background-color: rgba(251, 191, 36, 0.1); color: #fbbf24; }
 body.dark-mode .error-message { color: #f87171; }
+
+/* ==========================================================================
+   Custom Brand Logo (Single Monogram Image)
+   ========================================================================== */
+.custom-logo {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    border-radius: 50%;
+    height: 48px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.custom-logo:hover {
+    transform: scale(1.05);
+}
+
+.custom-logo-img {
+    height: 100%;
+    width: auto;
+    object-fit: contain;
+    display: block;
+    border-radius: 50%;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+body.dark-mode .custom-logo-img {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
