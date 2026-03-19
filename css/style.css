@@ -225,6 +225,7 @@ ul {
     background: var(--bg-card);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-md);
+    position: relative;
     width: 100%;
     max-width: 450px;
     padding: 40px;

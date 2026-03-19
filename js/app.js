@@ -30,9 +30,32 @@ function loadUserData() {
         return;
     }
 
+    // Ensure important readonly fields always display a value
+    let needsSave = false;
+    if (!currentUser.accountNumber) {
+        currentUser.accountNumber = "NXB" + Math.floor(10000000000 + Math.random() * 90000000000);
+        needsSave = true;
+    }
+    if (!currentUser.aadhaarNumber) {
+        currentUser.aadhaarNumber = "**** **** " + Math.floor(1000 + Math.random() * 9000);
+        needsSave = true;
+    }
+    if (needsSave) saveUserData();
+
     // Populate Topbar & Dashboard specific generic user points
     document.getElementById('topbarName').innerText = currentUser.name;
     document.getElementById('dashWaveName').innerText = currentUser.name.split(' ')[0];
+
+    // Dropdown fields
+    if(document.getElementById('dropdownName')) {
+        document.getElementById('dropdownName').innerText = currentUser.name;
+        document.getElementById('dropdownEmail').innerText = currentUser.email || 'N/A';
+        document.getElementById('dropdownPhone').innerText = currentUser.phone || 'N/A';
+        document.getElementById('dropdownGender').innerText = currentUser.gender || 'N/A';
+        document.getElementById('dropdownAccount').innerText = currentUser.accountNumber || 'N/A';
+        
+        populateAccountSwitcher();
+    }
 
     setAvatar(currentUser.name, currentUser.profilePic);
 
@@ -55,7 +78,7 @@ function loadUserData() {
 function setAvatar(name, picUrl) {
     const defaultInitial = name.charAt(0).toUpperCase();
 
-    const els = ['topbarAvatar', 'profileAvatarBig'];
+    const els = ['topbarAvatar', 'profileAvatarBig', 'dropdownAvatar'];
     els.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -106,6 +129,87 @@ function setupNavigation() {
             if (targetId === 'view-analytics') { setupCharts(); }
         });
     });
+}
+
+function toggleProfileDropdown() {
+    const dropdown = document.getElementById('profileDropdown');
+    if (dropdown) {
+        if (dropdown.style.display === 'none' || dropdown.style.display === '') {
+            dropdown.style.display = 'block';
+        } else {
+            dropdown.style.display = 'none';
+        }
+    }
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+    const container = document.getElementById('profileDropdownContainer');
+    const dropdown = document.getElementById('profileDropdown');
+    if (container && dropdown && !container.contains(e.target)) {
+        dropdown.style.display = 'none';
+    }
+});
+
+function populateAccountSwitcher() {
+    const list = document.getElementById('accountSwitcherList');
+    const section = document.getElementById('accountSwitcherSection');
+    if (!list) return;
+    list.innerHTML = '';
+    
+    // Switch accounts logic: only allow if more than one user has the SAME phone number
+    const otherUsers = allUsers.filter(u => u.phone === currentUser.phone && u.id !== currentUser.id).slice(0, 3);
+    
+    if (otherUsers.length === 0) {
+        if (section) section.style.display = 'none';
+        return;
+    }
+    
+    if (section) section.style.display = 'block';
+    
+    otherUsers.forEach(user => {
+        const initial = user.name.charAt(0).toUpperCase();
+        const div = document.createElement('div');
+        div.style.display = 'flex';
+        div.style.alignItems = 'center';
+        div.style.gap = '12px';
+        div.style.padding = '8px';
+        div.style.borderRadius = 'var(--radius-sm)';
+        div.style.cursor = 'pointer';
+        div.style.transition = 'background-color 0.2s';
+        
+        div.onmouseover = () => div.style.backgroundColor = 'rgba(0,0,0,0.05)';
+        div.onmouseout = () => div.style.backgroundColor = 'transparent';
+        
+        div.onclick = () => switchAccount(user.id);
+        
+        const avatarHtml = user.profilePic 
+            ? `<img src="${user.profilePic}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">` 
+            : initial;
+            
+        div.innerHTML = `
+            <div class="avatar" style="width: 32px; height: 32px; font-size: 0.9rem; flex-shrink: 0; background: var(--bg-main); color: var(--primary);">${avatarHtml}</div>
+            <div style="flex: 1; overflow: hidden;">
+                <div style="font-size: 0.9rem; font-weight: 500; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${user.name}</div>
+                <div style="font-size: 0.75rem; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${user.email || 'N/A'}</div>
+            </div>
+            <i class="fas fa-chevron-right" style="font-size: 0.7rem; color: var(--text-light);"></i>
+        `;
+        list.appendChild(div);
+    });
+}
+
+function switchAccount(userId) {
+    const token = "token_" + Math.random().toString(36).substr(2);
+    
+    const session = {
+        userId: userId,
+        token: token,
+        expiresAt: Date.now() + (1000 * 60 * 60 * 24)
+    };
+
+    localStorage.setItem('nexusSession', JSON.stringify(session));
+    window.location.reload();
 }
 
 function setupSidebarToggle() {
