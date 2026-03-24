@@ -22,7 +22,7 @@
                 <div id="adminError" class="error-message"></div>
                 <div class="form-group">
                     <label class="form-label">Admin Pin Code</label>
-                    <input type="password" id="adminPin" class="form-control" placeholder="Enter PIN (Demo: 0000)" required>
+                    <input type="password" id="adminPin" class="form-control" placeholder="Enter PIN (Demo: XXXX)" required>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block">Access Admin Hub</button>
             </form>
@@ -138,12 +138,12 @@
         document.getElementById('adminLoginForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const pin = document.getElementById('adminPin').value;
-            if(pin === '0000') {
+            if(pin === '7890') {
                 document.getElementById('adminLoginView').style.display = 'none';
                 document.getElementById('adminDashboardView').style.display = 'flex';
                 loadAdminData();
             } else {
-                document.getElementById('adminError').innerText = "Invalid Admin PIN (Hint: 0000)";
+                document.getElementById('adminError').innerText = "Invalid Admin PIN ";
                 document.getElementById('adminError').style.display = 'block';
             }
         });
