@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cashier Portal | Aurex</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+    
+    <!-- Cashier Login UI -->
+    <div id="cashierLoginView" class="auth-container" style="display:flex;">
+        <div class="auth-card">
+            <div class="auth-header" style="text-align: center;">
+                <div style="width: 60px; height: 60px; background: rgba(255, 64, 129, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                    <i class="fas fa-cash-register" style="font-size: 1.8rem; color: #ff4081;"></i>
+                </div>
+                <h2>Cashier Login</h2>
+                <p>Digital Banking Operations</p>
+            </div>
+            <form id="cashierLoginForm">
+                <div id="cashierError" class="error-message"></div>
+                <div class="form-group">
+                    <label class="form-label">Cashier Access PIN</label>
+                    <input type="password" id="cashierPin" class="form-control" placeholder="Enter PIN (Demo: 2222)" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" style="background: #ff4081; border: none;">Login to Register</button>
+            </form>
+            <div style="text-align:center; margin-top:16px;">
+                <a href="admin_landing.html" style="font-size: 0.9rem; color: var(--text-light);"><i class="fas fa-arrow-left"></i> Back to Selector</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cashier Dashboard UI -->
+    <div id="cashierDashboardView" style="display:none; min-height: 100vh; background: var(--bg-main); padding: 40px 24px;">
+        <div style="max-width: 1000px; margin: 0 auto; width: 100%;">
+            
+            <!-- Header -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; background: var(--bg-card); padding: 20px 32px; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border-left: 5px solid #ff4081;">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <h2 style="margin: 0; font-size: 1.5rem;">Cashier Control</h2>
+                    <span class="badge-status badge-success" style="background: rgba(255, 64, 129, 0.1); color: #ff4081; font-weight: 700;">LIVE SESSION</span>
+                </div>
+                <button onclick="logoutCashier()" class="btn btn-outline" style="border-color: #ff4081; color: #ff4081;">
+                    <i class="fas fa-sign-out-alt"></i> Exit
+                </button>
+            </div>
+
+            <!-- Summary -->
+            <div class="cards-row" style="margin-bottom: 32px;">
+                <div class="dashboard-card" style="text-align: center;">
+                    <div class="card-title" style="justify-content: center;">Total Users</div>
+                    <div class="card-value" id="cashierUserCount">0</div>
+                </div>
+                <div class="dashboard-card" style="text-align: center; border-bottom: 3px solid #ff4081;">
+                    <div class="card-title" style="justify-content: center;">Pending Loan Verifications</div>
+                    <div class="card-value" id="cashierPendingLoans">0</div>
+                </div>
+            </div>
+
+            <!-- Loan Applications Table -->
+            <div class="dashboard-card table-container" style="padding:0; margin-bottom: 32px; border-top: 2px solid #ff4081;">
+                <div style="padding: 24px 32px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin:0;"><i class="fas fa-file-invoice-dollar" style="margin-right: 10px; color: #ff4081;"></i>Loan Verification Queue</h3>
+                    <span style="font-size: 0.85rem; color: var(--text-light);">Step 1: Cashier Verification</span>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>User</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cashierLoanTable">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- User Audit Table -->
+            <div class="dashboard-card table-container" style="padding:0;">
+                <div style="padding: 24px 32px; border-bottom: 1px solid var(--border-color);">
+                    <h3 style="margin:0;"><i class="fas fa-users" style="margin-right: 10px; color: #ff4081;"></i>User Records Audit</h3>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>User ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Account Number</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cashierUserTable">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const cashierLoginView = document.getElementById('cashierLoginView');
+        const cashierDashboardView = document.getElementById('cashierDashboardView');
+
+        // LOGIN
+        document.getElementById('cashierLoginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const pin = document.getElementById('cashierPin').value;
+            if(pin === '2222') {
+                cashierLoginView.style.display = 'none';
+                cashierDashboardView.style.display = 'block';
+                loadCashierData();
+            } else {
+                document.getElementById('cashierError').innerText = "Access Denied: Invalid Cashier PIN";
+                document.getElementById('cashierError').style.display = 'block';
+            }
+        });
+
+        function logoutCashier() {
+            cashierDashboardView.style.display = 'none';
+            cashierLoginView.style.display = 'flex';
+            document.getElementById('cashierPin').value = '';
+        }
+
+        async function loadCashierData() {
+            // Load Users
+            const users = JSON.parse(localStorage.getItem('nexusUsers')) || [];
+            document.getElementById('cashierUserCount').innerText = users.length;
+
+            const userTable = document.getElementById('cashierUserTable');
+            userTable.innerHTML = '';
+            users.forEach(u => {
+                userTable.innerHTML += `
+                    <tr>
+                        <td style="font-family:monospace; font-size:0.8rem;">${u.id}</td>
+                        <td style="font-weight:600;">${u.name}</td>
+                        <td>${u.email}</td>
+                        <td>${u.accountNumber || 'N/A'}</td>
+                        <td>
+                            <span class="badge-status ${u.isBlocked ? 'badge-danger' : 'badge-success'}">
+                                ${u.isBlocked ? 'BLOCKED' : 'ACTIVE'}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            // Load Loans
+            await fetchLoans();
+        }
+
+        async function fetchLoans() {
+            try {
+                const res = await fetch('http://localhost:5000/api/loans/all');
+                const data = await res.json();
+                
+                const loanTable = document.getElementById('cashierLoanTable');
+                loanTable.innerHTML = '';
+                
+                // Filter locally for Pending Cashier
+                const pendingLoans = data.loans.filter(l => l.status === 'Pending Cashier' || l.status === 'Pending'); // Include 'Pending' for old records
+                document.getElementById('cashierPendingLoans').innerText = pendingLoans.length;
+
+                if(pendingLoans.length === 0) {
+                    loanTable.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 40px; color: var(--text-light);">No pending loan applications for verification.</td></tr>';
+                    return;
+                }
+
+                pendingLoans.forEach(loan => {
+                    const date = new Date(loan.date).toLocaleDateString();
+                    loanTable.innerHTML += `
+                        <tr>
+                            <td>${date}</td>
+                            <td>
+                                <b>${loan.userId ? loan.userId.name : 'Unknown'}</b><br>
+                                <small>${loan.userId ? loan.userId.email : ''}</small>
+                            </td>
+                            <td>${loan.loanType}</td>
+                            <td style="font-weight:700; color: #ff4081;">₹${loan.amount.toLocaleString()}</td>
+                            <td>
+                                <button onclick="processLoan('${loan._id}', 'Verified by Cashier')" class="btn" style="background:var(--success); color:white; border:none; padding: 6px 12px; font-size: 0.8rem; margin-right: 5px;">
+                                    Verify
+                                </button>
+                                <button onclick="processLoan('${loan._id}', 'Rejected')" class="btn" style="background:var(--danger); color:white; border:none; padding: 6px 12px; font-size: 0.8rem;">
+                                    Reject
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+            } catch(e) {
+                console.error("Failed to fetch loans:", e);
+            }
+        }
+
+        async function processLoan(loanId, nextStatus) {
+            const confirmMsg = nextStatus === 'Rejected' 
+                ? "Are you sure you want to REJECT this loan application?" 
+                : "Confirm verification for this loan? It will be sent to the Bank Manager for final approval.";
+            
+            if(!confirm(confirmMsg)) return;
+
+            try {
+                const res = await fetch(`http://localhost:5000/api/loans/${loanId}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: nextStatus })
+                });
+
+                if(res.ok) {
+                    alert(`Loan application ${nextStatus === 'Rejected' ? 'REJECTED' : 'VERIFIED'}.`);
+                    fetchLoans();
+                } else {
+                    const err = await res.json();
+                    alert("Error: " + err.message);
+                }
+            } catch(e) {
+                alert("Network error processing loan.");
+            }
+        }
+    </script>
+</body>
+</html>

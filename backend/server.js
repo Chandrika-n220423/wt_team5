@@ -1,0 +1,49 @@
+require("dotenv").config();
+const express = require("express");
+const passport = require("passport");
+const cors = require("cors");
+const path = require("path"); // ✅ ADD THIS
+
+const connectDB = require("./config/db");
+const authRoutes = require("./routes/authRoutes");
+const userRoutes = require("./routes/userRoutes");
+const transactionRoutes = require("./routes/transactionRoute");
+const adminRoutes = require("./routes/adminRoutes");
+const { errorHandler } = require("./middleware/errorMiddleware");
+
+const app = express();
+
+// Connect DB
+connectDB();
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// ✅ FIXED STATIC PATH
+app.use(express.static(path.join(__dirname, "../public")));
+
+// Passport
+app.use(passport.initialize());
+
+// Routes
+app.use("/api", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/transactions", transactionRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/loans", require("./routes/loanRoutes"));
+app.use("/api/issues", require("./routes/issueRoutes"));
+
+// Test Route
+app.get("/", (req, res) => {
+    res.send("Mini Banking Backend Running");
+});
+
+// Error Handler
+app.use(errorHandler);
+
+// Server
+const PORT = 5000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});

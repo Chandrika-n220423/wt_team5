@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portal | Aurex</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .role-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 24px;
+            margin-top: 32px;
+        }
+        .role-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 32px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .role-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary);
+        }
+        .role-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 16px;
+        }
+        @media (max-width: 600px) {
+            .role-cards { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body style="background: var(--bg-main); display: flex; align-items: center; justify-content: center; min-height: 100vh;">
+
+    <div style="max-width: 800px; width: 100%; padding: 0 24px;">
+        <div style="text-align: center; margin-bottom: 40px;">
+            <a href="index.html" class="logo" style="display:inline-block; margin-bottom: 24px;">
+                <img src="assets/ajhggc_logo.png" alt="Logo" class="custom-logo-img" style="height: 64px;">
+            </a>
+            <h1 style="font-size: 2.5rem; margin-bottom: 8px;">Aurex Administration</h1>
+            <p style="color: var(--text-light); font-size: 1.1rem;">Select your designated portal role to proceed.</p>
+        </div>
+
+        <div class="role-cards">
+            <!-- Bank Manager Entry -->
+            <a href="admin.html" class="role-card">
+                <i class="fas fa-briefcase role-icon"></i>
+                <h3 style="margin-bottom: 8px;">Bank Manager Login</h3>
+                <p style="color: var(--text-light); font-size: 0.9rem; margin: 0;">Final loan approvals, system liquidity, and user management oversight.</p>
+            </a>
+
+            <!-- Accountant Entry -->
+            <a href="accountant.html" class="role-card">
+                <i class="fas fa-calculator role-icon" style="color: var(--warning);"></i>
+                <h3 style="margin-bottom: 8px;">Accountant Login</h3>
+                <p style="color: var(--text-light); font-size: 0.9rem; margin: 0;">Authorize user deletion requests and approve sensitive profile modifications.</p>
+            </a>
+
+            <!-- Cashier Entry -->
+            <a href="cashier.html" class="role-card">
+                <i class="fas fa-cash-register role-icon" style="color: #ff4081;"></i>
+                <h3 style="margin-bottom: 8px;">Cashier Login</h3>
+                <p style="color: var(--text-light); font-size: 0.9rem; margin: 0;">Initial loan verification, user auditing, and daily transaction oversight.</p>
+            </a>
+        </div>
+        
+        <div style="text-align:center; margin-top:32px;">
+            <a href="index.html" style="font-size: 0.95rem; color: var(--text-light);"><i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Return to main site</a>
+        </div>
+    </div>
+
+</body>
+</html>

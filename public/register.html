@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | Aurex</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+
+</head>
+<body>
+
+    <div class="auth-container">
+        <div class="auth-card wide">
+            <a href="index.html" style="position: absolute; top: 16px; right: 16px; font-size: 1.5rem; color: var(--text-light); transition: color 0.3s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-light)'"><i class="fas fa-times"></i></a>
+            <div class="auth-header">
+                <a href="index.html" class="logo">
+                    <i class="fas fa-university icon-primary"></i>
+                    <img src="assets/ajhggc_logo.png" alt="Logo" class="custom-logo-img" style="height: 48px; margin: 0 auto;">
+                </a>
+                <h2>Create Your Account</h2>
+                <p style="color:var(--text-light); margin-top:8px;">Join the future of banking today.</p>
+            </div>
+
+            <form id="registerForm" onsubmit="handleRegistration(event)">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" style="text-align:left;">Full Name</label>
+                        <input type="text" id="regName" class="form-control" placeholder="John Doe" required>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" style="text-align:left;">Email Address</label>
+                        <input type="email" id="regEmail" class="form-control" placeholder="john@example.com" required>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" style="text-align:left;">Phone Number</label>
+                        <input type="tel" id="regPhone" class="form-control" placeholder="10-digit mobile number" pattern="[0-9]{10}" title="Must be a 10-digit number" required>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" style="text-align:left;">Date of Birth</label>
+                        <input type="date" id="regDob" class="form-control" required>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" style="text-align:left;">Aadhaar Number</label>
+                        <input type="text" id="regAadhaar" class="form-control" placeholder="12-digit Aadhaar" pattern="[0-9]{12}" title="Must be exactly 12 digits" required maxlength="12">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" style="text-align:left;">Gender</label>
+                        <select id="regGender" class="form-control" required>
+                            <option value="" disabled selected>Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:0; grid-column: 1 / -1;">
+                        <label class="form-label" style="text-align:left;">Initial Balance (₹)</label>
+                        <input type="number" id="regBalance" class="form-control" placeholder="1000" min="0" required>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" style="text-align:left;">Password</label>
+                        <input type="password" id="regPassword" class="form-control" placeholder="Create strong password" required minlength="6">
+                        <div class="password-strength">
+                            <div class="strength-bar" id="strengthBar"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" style="text-align:left;">Confirm Password</label>
+                        <input type="password" id="regConfirmPassword" class="form-control" placeholder="Confirm password" required>
+                        <div class="error-message" id="passMismatchError">Passwords do not match</div>
+                    </div>
+                </div>
+
+                <div id="regGlobalError" class="error-message" style="margin-bottom: 20px; margin-top: 20px; font-size:1rem; text-align:center;"></div>
+
+                <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top: 20px;">Register Account</button>
+
+
+            </form>
+
+            <div class="auth-footer">
+                Already have an account? <a href="login.html">Login here</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script specifically for auth functions will be linked here -->
+    <script src="js/auth.js"></script>
+    <script>
+        // Password strength meter visual
+        document.getElementById('regPassword').addEventListener('input', function(e) {
+            const val = e.target.value;
+            const bar = document.getElementById('strengthBar');
+            if(val.length === 0) { bar.style.width = '0'; }
+            else if(val.length < 6) { bar.style.width = '33%'; bar.style.backgroundColor = 'var(--danger)'; }
+            else if(val.length < 10) { bar.style.width = '66%'; bar.style.backgroundColor = 'var(--warning)'; }
+            else { bar.style.width = '100%'; bar.style.backgroundColor = 'var(--success)'; }
+        });
+    </script>
+</body>
+</html>
