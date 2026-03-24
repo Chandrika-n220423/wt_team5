@@ -940,6 +940,16 @@ function populateFullHistory() {
 /**
  * Sub-Feature: Statements
  */
+function toggleCustomDateRange() {
+    const period = document.getElementById('statementPeriod').value;
+    const customDiv = document.getElementById('customDateRange');
+    if (period === 'custom') {
+        customDiv.style.display = 'flex';
+    } else {
+        customDiv.style.display = 'none';
+    }
+}
+
 async function simulateDownload() {
     const msg = document.getElementById('downloadMsg');
     const format = document.querySelector('input[name="format"]:checked').value;
@@ -954,6 +964,54 @@ async function simulateDownload() {
             throw new Error("You must be logged in to download a statement.");
         }
 
+        const period = document.getElementById('statementPeriod').value;
+        let filteredTransactions = [];
+        const now = new Date();
+
+        if (period === 'current') {
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            filteredTransactions = currentUser.transactions.filter(tx => new Date(tx.date) >= startOfMonth);
+        } else if (period === 'last') {
+            const firstOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            const lastOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+            filteredTransactions = currentUser.transactions.filter(tx => {
+                const txDate = new Date(tx.date);
+                return txDate >= firstOfLastMonth && txDate <= lastOfLastMonth;
+            });
+        } else if (period === '3months') {
+            const threeMonthsAgo = new Date();
+            threeMonthsAgo.setMonth(now.getMonth() - 3);
+            filteredTransactions = currentUser.transactions.filter(tx => new Date(tx.date) >= threeMonthsAgo);
+        } else if (period === 'custom') {
+            const start = document.getElementById('startDate').value;
+            const end = document.getElementById('endDate').value;
+            
+            if (!start || !end) {
+                throw new Error("Please select both start and end dates for custom range.");
+            }
+            
+            const startDate = new Date(start);
+            startDate.setHours(0, 0, 0, 0);
+            const endDate = new Date(end);
+            endDate.setHours(23, 59, 59, 999);
+
+            if (startDate > endDate) {
+                throw new Error("Start date cannot be after end date.");
+            }
+
+            filteredTransactions = currentUser.transactions.filter(tx => {
+                const txDate = new Date(tx.date);
+                return txDate >= startDate && txDate <= endDate;
+            });
+        } else {
+            // Default to all if something goes wrong
+            filteredTransactions = currentUser.transactions;
+        }
+
+        if (filteredTransactions.length === 0) {
+            throw new Error("No transactions found for the selected period.");
+        }
+
         const endpoint = format === 'pdf' ? '/api/users/export/pdf' : '/api/users/export/csv';
         const response = await fetch(`http://localhost:5000${endpoint}`, {
             method: 'POST',
@@ -961,7 +1019,7 @@ async function simulateDownload() {
                 'Authorization': `Bearer ${session.token}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ transactions: currentUser.transactions })
+            body: JSON.stringify({ transactions: filteredTransactions })
         });
 
         if(!response.ok) {
