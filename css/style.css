@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&display=swap');
 /* ==========================================================================
    CSS Variables & Theme
    ========================================================================== */
@@ -343,6 +344,17 @@ ul {
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--primary);
+}
+
+.aurex-logo {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 1.8rem;
+    letter-spacing: 1.5px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-transform: uppercase;
 }
 
 .icon-primary {
