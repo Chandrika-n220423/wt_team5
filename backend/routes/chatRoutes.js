@@ -19,7 +19,7 @@ router.post("/", async (req, res) => {
 
         // 1. Predefined Quick Replies & Broad Keyword Matching
         if (query.includes("open account") || query.includes("create account") || query.includes("register") || query.includes("new account")) {
-            botResponse = "To open a new NexusBank account, please click on the 'Register' or 'Open an Account' button on our homepage to get started.";
+            botResponse = "To open a new Aurex account, please click on the 'Register' or 'Open an Account' button on our homepage to get started.";
         } else if (query.includes("transaction") || query.includes("payment") || query.includes("transfer") || query.includes("send money") || query.includes("pending")) {
             botResponse = "For transaction issues: Please wait up to 24 hours for pending transfers. If a payment failed and money was deducted, it will be automatically refunded to your account within 3-5 working days. You can also send money instantly via the UPI/QR sections in your Dashboard.";
         } else if (query.includes("login") || query.includes("password") || query.includes("sign in") || query.includes("forgot password")) {
@@ -27,15 +27,15 @@ router.post("/", async (req, res) => {
         } else if (query.includes("balance") || query.includes("statement") || query.includes("history") || query.includes("analytics")) {
             botResponse = "You can view your real-time account balance, analytics, and download comprehensive transaction history (CSV/PDF format) directly from your personalized Dashboard once logged in.";
         } else if (query.includes("loan") || query.includes("apply") || query.includes("emi")) {
-             botResponse = "NexusBank provides quick Personal, Education, and Home loans with competitive interest rates! Navigate to the 'Loans' section in your dashboard to check eligibility, calculate EMI, and apply instantly.";
+             botResponse = "Aurex provides quick Personal, Education, and Home loans with competitive interest rates! Navigate to the 'Loans' section in your dashboard to check eligibility, calculate EMI, and apply instantly.";
         } else if (query.includes("card") || query.includes("debit card") || query.includes("credit card") || query.includes("lost card") || query.includes("block")) {
              botResponse = "To manage your debit/credit cards or report a lost card, please log in and navigate to 'Card Services', or call our 24/7 toll-free emergency number: +1 (800) 123-4567 to block it immediately.";
         } else if (query.includes("contact") || query.includes("customer care") || query.includes("support") || query.includes("phone number")) {
-             botResponse = "You can reach our 24/7 human support team by calling +1 (800) 123-4567, emailing support@nexusbank.com, or using the 'Get in Touch' form on our Contact page.";
+             botResponse = "You can reach our 24/7 human support team by calling +1 (800) 123-4567, emailing support@aurex.com, or using the 'Get in Touch' form on our Contact page.";
         } else if (query.includes("branch") || query.includes("location") || query.includes("address") || query.includes("atm")) {
-             botResponse = "Our main branch is located at 123 Banking Street, Tech District, NY 10001. We also have partner ATMs nationwide with zero withdrawal fees for NexusBank customers.";
+             botResponse = "Our main branch is located at 123 Banking Street, Tech District, NY 10001. We also have partner ATMs nationwide with zero withdrawal fees for Aurex customers.";
         } else if (query.includes("fee") || query.includes("charges") || query.includes("minimum balance")) {
-             botResponse = "NexusBank prides itself on having 0% hidden fees! We do not require a minimum balance for standard accounts, making banking completely free and accessible for you.";
+             botResponse = "Aurex prides itself on having 0% hidden fees! We do not require a minimum balance for standard accounts, making banking completely free and accessible for you.";
         } else if (query.includes("time") || query.includes("hours") || query.includes("open")) {
              botResponse = "Our digital banking and AI support are available 24/7. Physical branches operate Monday through Friday, 9:00 AM to 5:00 PM.";
         } else {
@@ -44,7 +44,7 @@ router.post("/", async (req, res) => {
                 try {
                     const https = require('https');
                     const postData = JSON.stringify({
-                        contents: [{ parts: [{ text: `You are a helpful, professional AI assistant for a digital bank named NexusBank. Be concise, max 1-2 short sentences. Answer the user: ${message}` }] }]
+                        contents: [{ parts: [{ text: `You are a helpful, professional AI assistant for a digital bank named Aurex. Be concise, max 1-2 short sentences. Answer the user: ${message}` }] }]
                     });
 
                     const options = {

@@ -7,6 +7,8 @@ const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 
 const router = express.Router();
+
+// 💡 Fallback IDs to prevent "OAuth2Strategy requires a clientID option" error
 const G_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "missing_client_id";
 const G_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "missing_client_secret";
 

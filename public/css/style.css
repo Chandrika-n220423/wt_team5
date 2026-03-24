@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
 /* ==========================================================================
    CSS Variables & Theme
    ========================================================================== */
@@ -395,6 +397,17 @@ body.dark-mode .btn-google:hover {
 .icon-primary {
     color: var(--text-main);
     font-size: 1.8rem;
+}
+
+.brand-text {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 1.6rem;
+    letter-spacing: 1px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-left: -5px;
 }
 
 .nav-links {

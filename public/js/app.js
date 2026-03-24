@@ -972,7 +972,7 @@ async function simulateDownload() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `nexus_statement_${format}_${Date.now()}.${format}`;
+        a.download = `aurex_statement_${format}_${Date.now()}.${format}`;
         a.click();
         URL.revokeObjectURL(url);
 

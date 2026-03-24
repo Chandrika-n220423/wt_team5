@@ -5,7 +5,7 @@ const cors = require("cors");
 const path = require("path"); // ✅ ADD THIS
 
 const connectDB = require("./config/db");
-const authRoutes = require("./routes/authRoutes");
+const authRoutes = require("./routes/authRoutes_v2");
 const userRoutes = require("./routes/userRoutes");
 const transactionRoutes = require("./routes/transactionRoute");
 const adminRoutes = require("./routes/adminRoutes");
