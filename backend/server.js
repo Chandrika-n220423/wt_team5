@@ -22,6 +22,7 @@ app.use("/api", authRoutes);  // keep original /register and /login if needed
 app.use("/api/users", userRoutes); // mount new JWT-based user routes
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/cashier", require("./routes/cashierRoutes"));
 app.use("/api/loans", require("./routes/loanRoutes"));
 
 // Test Route

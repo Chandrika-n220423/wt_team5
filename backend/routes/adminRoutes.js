@@ -189,4 +189,39 @@ router.post("/export/pdf", async (req, res, next) => {
   }
 });
 
+// PUT /final-approve/:id - Manager final loan approval
+const Loan = require("../models/Loan");
+router.put("/final-approve/:id", verifyAdmin, async (req, res, next) => {
+  try {
+    const loan = await Loan.findById(req.params.id);
+    if (!loan) return res.status(404).json({ message: "Loan not found." });
+    
+    if (loan.status !== "verified_by_cashier") {
+      return res.status(400).json({ message: "Only loans verified by cashier can be approved." });
+    }
+
+    loan.status = "approved";
+    await loan.save();
+
+    res.json({ message: "Loan approved successfully", loan });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PUT /reject/:id - Manager reject loan
+router.put("/reject/:id", verifyAdmin, async (req, res, next) => {
+  try {
+    const loan = await Loan.findById(req.params.id);
+    if (!loan) return res.status(404).json({ message: "Loan not found." });
+    
+    loan.status = "rejected";
+    await loan.save();
+
+    res.json({ message: "Loan rejected successfully", loan });
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;

@@ -140,4 +140,48 @@ router.post("/forgot-password", async (req, res) => {
   }
 });
 
+/* ================= MANAGER & CASHIER PIN LOGIN ================= */
+router.post("/manager-pin-login", async (req, res) => {
+  try {
+    const { pin } = req.body;
+    if (pin !== "7890") {
+      return res.status(400).json({ message: "Invalid Manager PIN" });
+    }
+    const token = jwt.sign(
+      { id: "manager_system_id", role: "manager" },
+      process.env.JWT_SECRET || "default_banking_secret",
+      { expiresIn: "10h" }
+    );
+    res.json({
+      message: "Manager login successful",
+      token,
+      user: { id: "manager_system_id", name: "System Manager", role: "manager" }
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+router.post("/cashier-pin-login", async (req, res) => {
+  try {
+    const { pin } = req.body;
+    if (pin !== "2006") {
+      return res.status(400).json({ message: "Invalid Cashier PIN" });
+    }
+    const token = jwt.sign(
+      { id: "cashier_system_id", role: "cashier" },
+      process.env.JWT_SECRET || "default_banking_secret",
+      { expiresIn: "10h" }
+    );
+    res.json({
+      message: "Cashier login successful",
+      token,
+      user: { id: "cashier_system_id", name: "System Cashier", role: "cashier" }
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
 module.exports = router;
+

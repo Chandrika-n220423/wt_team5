@@ -11,24 +11,110 @@
 </head>
 <body>
     
-    <!-- Admin Login UI vs Dashboard UI Check -->
-    <div id="adminLoginView" class="auth-container" style="display:flex;">
-        <div class="auth-card">
-            <div class="auth-header">
-                <h2>Admin Login</h2>
-                <p>Authorized personnel only.</p>
+    <style>
+        .role-cards-container {
+            display: flex;
+            gap: 24px;
+            margin-top: 32px;
+            margin-bottom: 32px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .role-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 32px 24px;
+            width: 300px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+        .role-card:hover {
+            border-color: #0f172a;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.05);
+            transform: translateY(-2px);
+        }
+        .role-card i {
+            font-size: 2.5rem;
+            color: #0f172a;
+            margin-bottom: 16px;
+            display: block;
+        }
+        .role-card h3 {
+            color: #0f172a;
+            margin-bottom: 12px;
+            font-size: 1.25rem;
+        }
+        .role-card p {
+            color: #64748b;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+        
+        .pin-container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid #e0e0e0;
+        }
+    </style>
+
+    <!-- Admin Selection UI -->
+    <div id="adminSelectionView" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; background:#f8f9fa; padding:20px;">
+        
+        <div style="text-align:center; margin-bottom: 8px;">
+            <div style="width: 60px; height: 60px; background: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 16px;">
+                <h1 style="font-family: 'Cinzel', serif; font-size: 1.8rem; margin:0; color: #0f172a; letter-spacing: -1px;">AX</h1>
+            </div>
+            <h1 style="color: #0f172a; margin-bottom: 8px; font-size: 2.2rem;">Aurex Administration</h1>
+            <p style="color: #64748b; font-size: 1.1rem;">Select your designated portal role to proceed.</p>
+        </div>
+
+        <div class="role-cards-container">
+            <div class="role-card" onclick="showPinForm('manager')">
+                <i class="fas fa-briefcase"></i>
+                <h3>Bank Manager Login</h3>
+                <p>Manage users, process loans, view system liquidity, and export transactions.</p>
+            </div>
+            
+            <div class="role-card" onclick="showPinForm('cashier')">
+                <i class="fas fa-calculator" style="color: #f59e0b;"></i>
+                <h3>Cashier Login</h3>
+                <p>Perform first-level request verifications, view user directory, and monitor transactions.</p>
+            </div>
+        </div>
+
+        <a href="index.html" style="color:#64748b; text-decoration:none; font-weight:500;"><i class="fas fa-arrow-left"></i> Return to main site</a>
+    </div>
+
+    <!-- Admin PIN Form UI -->
+    <div id="adminLoginView" style="display:none; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; background:#f8f9fa; padding:20px;">
+        <div class="pin-container" style="width:100%;">
+            <div class="auth-header" style="text-align:center; margin-bottom:24px;">
+                <h2 id="pinFormTitle">Manager Portal</h2>
+                <p>Please enter your secure access PIN.</p>
             </div>
             <form id="adminLoginForm">
                 <div id="adminError" class="error-message"></div>
+                
+                <input type="hidden" id="selectedRole" value="">
+
                 <div class="form-group">
-                    <label class="form-label">Admin Pin Code</label>
-                    <input type="password" id="adminPin" class="form-control" placeholder="Enter PIN (Demo: XXXX)" required>
+                    <label class="form-label" id="pinLabel" style="font-weight:500;">Access PIN</label>
+                    <input type="password" id="adminPin" class="form-control" placeholder="Enter PIN" required style="text-align:center; font-size:1.5rem; letter-spacing:4px;">
                 </div>
-                <button type="submit" class="btn btn-primary btn-block">Access Admin Hub</button>
+                <button type="submit" class="btn btn-primary btn-block" style="margin-bottom:16px;">Authenticate</button>
+                
+                <div style="text-align:center;">
+                    <a href="javascript:void(0)" onclick="goBackToSelection()" style="color:#64748b; text-decoration:none; font-size:0.9rem;"><i class="fas fa-arrow-left"></i> Back to Role Selection</a>
+                </div>
             </form>
-            <div style="text-align:center; margin-top:16px;">
-                <a href="index.html">Return to main site</a>
-            </div>
         </div>
     </div>
 
@@ -134,24 +220,68 @@
     </div>
 
     <script>
-        // Simple Admin check
-        document.getElementById('adminLoginForm').addEventListener('submit', (e) => {
+        function showPinForm(role) {
+            document.getElementById('adminSelectionView').style.display = 'none';
+            document.getElementById('adminLoginView').style.display = 'flex';
+            
+            document.getElementById('selectedRole').value = role;
+            document.getElementById('adminPin').value = '';
+            document.getElementById('adminError').style.display = 'none';
+            
+            if (role === 'manager') {
+                document.getElementById('pinFormTitle').innerText = 'Bank Manager Authorization';
+                document.getElementById('pinLabel').innerText = 'Manager PIN';
+            } else {
+                document.getElementById('pinFormTitle').innerText = 'Cashier Authorization';
+                document.getElementById('pinLabel').innerText = 'Cashier PIN';
+            }
+            
+            setTimeout(() => document.getElementById('adminPin').focus(), 100);
+        }
+
+        function goBackToSelection() {
+            document.getElementById('adminLoginView').style.display = 'none';
+            document.getElementById('adminSelectionView').style.display = 'flex';
+        }
+
+        document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const pin = document.getElementById('adminPin').value;
-            if(pin === '7890') {
-                document.getElementById('adminLoginView').style.display = 'none';
-                document.getElementById('adminDashboardView').style.display = 'flex';
-                loadAdminData();
-            } else {
-                document.getElementById('adminError').innerText = "Invalid Admin PIN ";
+            const role = document.getElementById('selectedRole').value;
+            const endpoint = role === 'manager' ? '/api/manager-pin-login' : '/api/cashier-pin-login';
+
+            try {
+                const res = await fetch(`http://localhost:5000${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pin })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    localStorage.setItem('nexusSession', JSON.stringify({ token: data.token, role: role, userId: data.user.id }));
+                    if (role === 'manager') {
+                        document.getElementById('adminLoginView').style.display = 'none';
+                        document.getElementById('adminDashboardView').style.display = 'flex';
+                        loadAdminData();
+                    } else {
+                        window.location.href = 'cashier.html';
+                    }
+                } else {
+                    document.getElementById('adminError').innerText = data.message || "Invalid PIN";
+                    document.getElementById('adminError').style.display = 'block';
+                }
+            } catch (err) {
+                document.getElementById('adminError').innerText = "Server Error!";
                 document.getElementById('adminError').style.display = 'block';
             }
         });
 
         function logoutAdmin() {
             document.getElementById('adminDashboardView').style.display = 'none';
-            document.getElementById('adminLoginView').style.display = 'flex';
+            document.getElementById('adminSelectionView').style.display = 'flex';
             document.getElementById('adminLoginForm').reset();
+            localStorage.removeItem('nexusSession');
         }
 
         async function loadAdminData() {
@@ -211,8 +341,9 @@
 
                 data.loans.forEach(loan => {
                     let badgeClass = 'badge-warning'; // pending
-                    if (loan.status === 'Approved') badgeClass = 'badge-success';
-                    if (loan.status === 'Rejected') badgeClass = 'badge-danger';
+                    if (loan.status === 'verified_by_cashier') badgeClass = 'badge-status'; // we can style it visually as primary or info
+                    if (loan.status === 'approved') badgeClass = 'badge-success';
+                    if (loan.status === 'rejected') badgeClass = 'badge-danger';
 
                     const d = new Date(loan.date);
                     const formattedDate = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -227,13 +358,13 @@
                             <td>${loan.loanType}</td>
                             <td style="font-weight:600;">₹${loan.amount.toFixed(2)}</td>
                             <td>
-                                <span class="badge-status ${badgeClass}">${loan.status}</span>
+                                <span class="badge-status ${badgeClass}" style="${loan.status === 'verified_by_cashier' ? 'background:rgba(0,123,255,0.1);color:#007bff;' : ''}">${loan.status.replace(/_/g, ' ').toUpperCase()}</span>
                             </td>
                             <td>
-                                ${loan.status === 'Pending' ? `
-                                    <button onclick="updateLoanStatus('${loan._id}', 'Approved', '${userIdStr}', ${loan.amount})" class="btn" style="background:var(--success); color:white; padding:4px 8px; font-size:0.8rem; border:none; margin-right:8px;">Approve</button>
-                                    <button onclick="updateLoanStatus('${loan._id}', 'Rejected', '${userIdStr}', ${loan.amount})" class="btn" style="background:var(--danger); color:white; padding:4px 8px; font-size:0.8rem; border:none;">Reject</button>
-                                ` : ''}
+                                ${loan.status === 'verified_by_cashier' ? `
+                                    <button onclick="updateLoanStatus('${loan._id}', 'final-approve', '${userIdStr}', ${loan.amount})" class="btn" style="background:var(--success); color:white; padding:4px 8px; font-size:0.8rem; border:none; margin-right:8px;">Final Approve</button>
+                                    <button onclick="updateLoanStatus('${loan._id}', 'reject', '${userIdStr}', ${loan.amount})" class="btn" style="background:var(--danger); color:white; padding:4px 8px; font-size:0.8rem; border:none;">Reject</button>
+                                ` : (loan.status === 'pending' ? '<span style="font-size:0.8rem;color:var(--text-light);">Awaiting Cashier</span>' : '<span style="font-size:0.8rem;color:var(--text-light);">Done</span>')}
                             </td>
                         </tr>
                     `;
@@ -243,19 +374,19 @@
             }
         }
 
-        async function updateLoanStatus(loanId, status, userId, amount) {
-            if (!confirm(`Are you sure you want to mark this loan as ${status}?`)) return;
+        async function updateLoanStatus(loanId, action, userId, amount) {
+            if (!confirm(`Are you sure you want to ${action} this loan?`)) return;
 
             try {
-                const res = await fetch(`http://localhost:5000/api/loans/${loanId}/status`, {
+                const session = JSON.parse(localStorage.getItem('nexusSession'));
+                const res = await fetch(`http://localhost:5000/api/admin/${action}/${loanId}`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status })
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` }
                 });
 
                 if (res.ok) {
                     // Update user balance locally if approved
-                    if (status === 'Approved') {
+                    if (action === 'final-approve') {
                         let users = JSON.parse(localStorage.getItem('nexusUsers')) || [];
                         const userIndex = users.findIndex(u => u.id === userId);
                         if (userIndex > -1) {
@@ -271,10 +402,10 @@
                             localStorage.setItem('nexusUsers', JSON.stringify(users));
                         }
                     }
-                    alert(`Loan ${status} successfully!`);
+                    alert(`Loan updated successfully!`);
                     loadAdminData(); // Refresh UI
                 } else {
-                    alert("Failed to update loan status.");
+                    alert("Failed to update loan status. Unauthorized or bad state.");
                 }
             } catch (err) {
                 alert("Server error. Please try again later.");

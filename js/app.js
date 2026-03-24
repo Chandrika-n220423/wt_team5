@@ -601,14 +601,20 @@ async function populateLoans() {
         
         // Populate Status
         const statusDisp = document.getElementById('loanStatusDisplay');
-        const activeLoan = currentUser.loans.find(l => l.status === 'Pending' || l.status === 'Approved');
+        const activeLoan = currentUser.loans.find(l => l.status === 'pending' || l.status === 'verified_by_cashier' || l.status === 'approved');
         
         if (activeLoan) {
+            let userBadgeClass = 'badge-warning';
+            let displayStatus = activeLoan.status.replace(/_/g, ' ').toUpperCase();
+            if (activeLoan.status === 'approved') userBadgeClass = 'badge-success';
+            if (activeLoan.status === 'rejected') userBadgeClass = 'badge-danger';
+            if (activeLoan.status === 'verified_by_cashier') userBadgeClass = 'badge-status'; // generic info blue or similar
+            
             statusDisp.innerHTML = `
                 <div style="padding:16px; background:var(--bg-card); border-radius:8px; text-align:center; border: 1px solid var(--border-color);">
                     <h4 style="margin-bottom:8px;">${activeLoan.loanType} Loan</h4>
                     <div style="font-size:1.5rem; font-weight:700; color:var(--text-main); margin-bottom:8px;">${formatMoney(activeLoan.amount)}</div>
-                    <span class="badge-status ${activeLoan.status === 'Approved' ? 'badge-success' : (activeLoan.status === 'Rejected' ? 'badge-danger' : 'badge-warning')}">${activeLoan.status}</span>
+                    <span class="badge-status ${userBadgeClass}" style="${activeLoan.status === 'verified_by_cashier' ? 'background:rgba(0,123,255,0.1);color:#007bff;' : ''}">${displayStatus}</span>
                     <p style="margin-top:12px; font-size:0.9rem; color:var(--text-light);">Applied on: ${formatDateLong(activeLoan.date)}</p>
                 </div>
             `;
@@ -627,15 +633,18 @@ async function populateLoans() {
         
         currentUser.loans.forEach(loan => {
             let badgeClass = 'badge-danger';
-            if (loan.status === 'Approved') badgeClass = 'badge-success';
-            if (loan.status === 'Pending') badgeClass = 'badge-warning';
+            if (loan.status === 'approved') badgeClass = 'badge-success';
+            if (loan.status === 'pending') badgeClass = 'badge-warning';
+            if (loan.status === 'verified_by_cashier') badgeClass = 'badge-status';
+
+            let displayStatus = loan.status.replace(/_/g, ' ').toUpperCase();
 
             tbody.innerHTML += `
                 <tr>
                     <td style="color:var(--text-light);">${formatDate(loan.date)}</td>
                     <td><strong>${loan.loanType}</strong></td>
                     <td style="font-weight:600;">${formatMoney(loan.amount)}</td>
-                    <td><span class="badge-status ${badgeClass}">${loan.status}</span></td>
+                    <td><span class="badge-status ${badgeClass}" style="${loan.status === 'verified_by_cashier' ? 'background:rgba(0,123,255,0.1);color:#007bff;' : ''}">${displayStatus}</span></td>
                 </tr>
             `;
         });

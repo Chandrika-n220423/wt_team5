@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cashier Portal | Aurex</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+    
+    <!-- Cashier Dashboard UI -->
+    <div id="cashierDashboardView" style="min-height: 100vh; background: var(--bg-main); padding: 40px 24px;">
+        <div style="max-width: 1000px; margin: 0 auto; width: 100%;">
+            
+            <!-- Cashier Header -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; background: var(--bg-card); padding: 24px 32px; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <div style="width: 50px; height: 50px; background: rgba(0, 123, 255, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-user-tie" style="font-size: 1.5rem; color: #007bff;"></i>
+                    </div>
+                    <div>
+                        <h2 style="margin: 0; font-size: 1.5rem;">Cashier Operations</h2>
+                        <p style="color: var(--text-light); margin: 0; font-size: 0.95rem;">Pending Verifications & Read-Only Audit</p>
+                    </div>
+                </div>
+                <button onclick="logoutCashier()" class="btn btn-outline" style="color: var(--danger); border-color: rgba(255, 59, 48, 0.3);">
+                    <i class="fas fa-sign-out-alt" style="margin-right:8px;"></i> Exit System
+                </button>
+            </div>
+
+            <!-- Stats -->
+            <div class="cards-row" style="margin-bottom: 32px;">
+                <div class="dashboard-card" style="text-align: center; padding: 32px 24px;">
+                    <div class="card-title" style="justify-content: center; color: var(--text-light);">Pending Requests</div>
+                    <div class="card-value" id="cashierPendingCount">0</div>
+                </div>
+                <div class="dashboard-card" style="text-align: center; padding: 32px 24px;">
+                    <div class="card-title" style="justify-content: center; color: var(--text-light);">Total Verified</div>
+                    <div class="card-value" id="cashierVerifiedCount" style="color: var(--success);">0</div>
+                </div>
+            </div>
+
+            <!-- Pending Verifications Table -->
+            <div class="dashboard-card table-container" style="padding:0; margin-bottom: 32px;">
+                <div style="padding: 24px 32px; border-bottom: 1px solid var(--border-color); background: #fafafa; border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
+                    <h3 style="margin:0; text-align: center;">Pending Verification Requests</h3>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="data-table" style="text-align: center; width: 100%;">
+                        <thead>
+                            <tr>
+                                <th style="text-align: center;">Date</th>
+                                <th style="text-align: center;">Applicant</th>
+                                <th style="text-align: center;">Type</th>
+                                <th style="text-align: center;">Amount</th>
+                                <th style="text-align: center;">Status</th>
+                                <th style="text-align: center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cashierLoansTable">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Users Table (Read Only) -->
+            <div class="dashboard-card table-container" style="padding:0;">
+                <div style="padding: 24px 32px; border-bottom: 1px solid var(--border-color); background: #fafafa; border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
+                    <h3 style="margin:0; text-align: center;">User Directory (Read-Only)</h3>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="data-table" style="text-align: center; width: 100%;">
+                        <thead>
+                            <tr>
+                                <th style="text-align: center;">Name</th>
+                                <th style="text-align: center;">Email</th>
+                                <th style="text-align: center;">Phone</th>
+                                <th style="text-align: center;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cashierUsersTable">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const session = JSON.parse(localStorage.getItem('nexusSession'));
+            if (!session || session.role !== 'cashier') {
+                alert("Unauthorized Access. Please login as Cashier.");
+                window.location.href = 'admin.html';
+                return;
+            }
+            loadCashierData();
+        });
+
+        function logoutCashier() {
+            localStorage.removeItem('nexusSession');
+            window.location.href = 'admin.html';
+        }
+
+        async function loadCashierData() {
+            try {
+                const session = JSON.parse(localStorage.getItem('nexusSession'));
+                
+                // Fetch Users
+                const usersRes = await fetch('http://localhost:5000/api/cashier/users', {
+                    headers: { 'Authorization': `Bearer ${session.token}` }
+                });
+                const usersData = await usersRes.json();
+                
+                const tbodyUsers = document.getElementById('cashierUsersTable');
+                tbodyUsers.innerHTML = '';
+                if(usersData.users) {
+                    usersData.users.forEach(u => {
+                        const statusClass = u.isBlocked ? 'badge-danger' : 'badge-success';
+                        const statusText = u.isBlocked ? 'BLOCKED' : 'ACTIVE';
+                        tbodyUsers.innerHTML += `
+                            <tr>
+                                <td style="font-weight:600;">${u.name}</td>
+                                <td>${u.email}</td>
+                                <td>${u.phone || 'N/A'}</td>
+                                <td><span class="badge-status ${statusClass}">${statusText}</span></td>
+                            </tr>
+                        `;
+                    });
+                }
+
+                // Fetch Pending Verifications / Loans
+                // The cashier needs to pull ALL loans to see count, but pending-requests API returns only pending
+                // So we do two things: Use pending-requests API
+                const reqRes = await fetch('http://localhost:5000/api/cashier/pending-requests', {
+                    headers: { 'Authorization': `Bearer ${session.token}` }
+                });
+                const reqData = await reqRes.json();
+                
+                const tbodyLoans = document.getElementById('cashierLoansTable');
+                tbodyLoans.innerHTML = '';
+                
+                if (!reqData.loans || reqData.loans.length === 0) {
+                    tbodyLoans.innerHTML = '<tr><td colspan="6">No pending verifications found</td></tr>';
+                    document.getElementById('cashierPendingCount').innerText = '0';
+                } else {
+                    document.getElementById('cashierPendingCount').innerText = reqData.loans.length;
+                    
+                    reqData.loans.forEach(loan => {
+                        const d = new Date(loan.date);
+                        const formattedDate = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        const userName = loan.userId ? loan.userId.name : 'Unknown User';
+                        
+                        tbodyLoans.innerHTML += `
+                            <tr>
+                                <td style="font-size:0.85rem;">${formattedDate}</td>
+                                <td style="font-weight:600;">${userName}</td>
+                                <td>${loan.loanType}</td>
+                                <td style="font-weight:600;">₹${loan.amount.toFixed(2)}</td>
+                                <td><span class="badge-status badge-warning">PENDING</span></td>
+                                <td>
+                                    <button onclick="verifyRequest('${loan._id}')" class="btn" style="background:#007bff; color:white; padding:4px 8px; font-size:0.8rem; border:none;">Verify</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+
+            } catch (err) {
+                console.error("Failed to load Cashier data", err);
+            }
+        }
+
+        async function verifyRequest(loanId) {
+            if (!confirm(`Are you sure you want to verify this request?`)) return;
+
+            try {
+                const session = JSON.parse(localStorage.getItem('nexusSession'));
+                const res = await fetch(`http://localhost:5000/api/cashier/verify-request/${loanId}`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${session.token}` }
+                });
+
+                if (res.ok) {
+                    let vCount = parseInt(document.getElementById('cashierVerifiedCount').innerText) || 0;
+                    document.getElementById('cashierVerifiedCount').innerText = vCount + 1;
+                    alert(`Request marked as Verified_by_Cashier.`);
+                    loadCashierData(); // Refresh UI
+                } else {
+                    const errorMsg = await res.json();
+                    alert("Failed to verify request: " + errorMsg.message);
+                }
+            } catch (err) {
+                alert("Server error. Please try again later.");
+            }
+        }
+    </script>
+</body>
+</html>

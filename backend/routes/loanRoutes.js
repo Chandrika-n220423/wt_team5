@@ -62,7 +62,7 @@ router.get("/all", async (req, res, next) => {
 router.put("/:id/status", async (req, res, next) => {
   try {
     const { status } = req.body;
-    if (!["Pending", "Approved", "Rejected"].includes(status)) {
+    if (!["pending", "verified_by_cashier", "approved", "rejected"].includes(status)) {
       return res.status(400).json({ message: "Invalid status value." });
     }
 

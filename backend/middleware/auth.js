@@ -17,7 +17,7 @@ exports.verifyUser = (req, res, next) => {
   }
 };
 
-exports.verifyAdmin = (req, res, next) => {
+exports.isManager = (req, res, next) => {
   try {
     const authHeader = req.header("Authorization");
     if (!authHeader) {
@@ -27,14 +27,39 @@ exports.verifyAdmin = (req, res, next) => {
     const token = authHeader.replace("Bearer ", "");
     const decoded = jwt.verify(token, process.env.JWT_SECRET || "default_banking_secret");
     
-    // Ensure the token specifies it belongs to an admin
-    if (!decoded.isAdmin) {
-      return res.status(403).json({ message: "Access denied. Admin privileges required." });
+    if (decoded.role !== 'manager') {
+      return res.status(403).json({ message: "Access denied. Manager privileges required." });
     }
     
-    req.admin = decoded;
+    req.admin = decoded; // For backwards compatibility
+    req.user = decoded;
     next();
   } catch (error) {
     res.status(401).json({ message: "Invalid or expired token." });
   }
 };
+
+exports.isCashier = (req, res, next) => {
+  try {
+    const authHeader = req.header("Authorization");
+    if (!authHeader) {
+      return res.status(401).json({ message: "Access denied. No token provided." });
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "default_banking_secret");
+    
+    if (decoded.role !== 'cashier') {
+      return res.status(403).json({ message: "Access denied. Cashier privileges required." });
+    }
+    
+    req.user = decoded;
+    next();
+  } catch (error) {
+    res.status(401).json({ message: "Invalid or expired token." });
+  }
+};
+
+// Alias for backwards compatibility with existing routes temporarily if needed
+exports.verifyAdmin = exports.isManager;
+
