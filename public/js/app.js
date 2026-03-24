@@ -799,19 +799,20 @@ function setupLoanLogic() {
                 const session = JSON.parse(localStorage.getItem('nexusSession'));
                 if (!session || !session.token) throw new Error('Unauthorized');
         
+                const formData = new FormData();
+                formData.append('amount', amount);
+                formData.append('loanType', loanType);
+                formData.append('monthlyIncome', monthlyIncome);
+                formData.append('employmentType', employmentType);
+                formData.append('durationMonths', durationMonths);
+                formData.append('document', document.getElementById('loanDocument').files[0]);
+
                 const response = await fetch('http://localhost:5000/api/loans/apply', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
                         'Authorization': `Bearer ${session.token}`
                     },
-                    body: JSON.stringify({
-                        amount,
-                        loanType,
-                        monthlyIncome,
-                        employmentType,
-                        durationMonths
-                    })
+                    body: formData
                 });
 
                 const data = await response.json();

@@ -541,6 +541,10 @@ const currentUserId = requireAuth();
                                         </select>
                                     </div>
                                 </div>
+                                <div class="form-group">
+                                    <label class="form-label" style="text-align:left;">Document Proof (ID/Income)</label>
+                                    <input type="file" id="loanDocument" class="form-control" accept=".pdf,.jpg,.jpeg,.png" required>
+                                </div>
                                 <div id="loanMessage" style="margin-bottom:16px; font-weight:500;"></div>
                                 <button type="submit" class="btn btn-primary btn-block">Apply Loan</button>
                             </form>

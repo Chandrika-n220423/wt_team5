@@ -36,6 +36,10 @@ const loanSchema = new mongoose.Schema({
   date: {
     type: Date,
     default: Date.now
+  },
+  documentProof: {
+    type: String,
+    required: true
   }
 });
 

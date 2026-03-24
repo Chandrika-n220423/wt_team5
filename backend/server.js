@@ -19,9 +19,11 @@ connectDB();
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // ✅ FIXED STATIC PATH
 app.use(express.static(path.join(__dirname, "../public")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Passport
 app.use(passport.initialize());

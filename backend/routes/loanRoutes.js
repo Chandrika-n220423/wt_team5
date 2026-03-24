@@ -1,16 +1,32 @@
 const express = require("express");
 const Loan = require("../models/Loan");
 const { verifyUser } = require("../middleware/auth");
+const multer = require("multer");
+const path = require("path");
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/loans/");
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage: storage });
 
 const router = express.Router();
 
 /* ================= APPLY FOR LOAN ================= */
-router.post("/apply", verifyUser, async (req, res, next) => {
+router.post("/apply", verifyUser, upload.single("document"), async (req, res, next) => {
   try {
+    if (!req.body) {
+      return res.status(400).json({ message: "Form data is missing." });
+    }
     const { amount, loanType, monthlyIncome, employmentType, durationMonths } = req.body;
 
-    if (!amount || !loanType || !monthlyIncome || !employmentType || !durationMonths) {
-      return res.status(400).json({ message: "All fields are required to apply for a loan." });
+    if (!amount || !loanType || !monthlyIncome || !employmentType || !durationMonths || !req.file) {
+      return res.status(400).json({ message: "All fields and document proof are required." });
     }
 
     if (Number(amount) <= 0 || Number(durationMonths) <= 0) {
@@ -23,7 +39,8 @@ router.post("/apply", verifyUser, async (req, res, next) => {
       loanType,
       monthlyIncome: Number(monthlyIncome),
       employmentType,
-      durationMonths: Number(durationMonths)
+      durationMonths: Number(durationMonths),
+      documentProof: req.file.filename
     });
 
     await loan.save();
