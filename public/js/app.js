@@ -8,6 +8,8 @@
 let currentUser = null;
 let allUsers = [];
 
+let isBalanceHidden = true;
+
 // Initialize Dashboard when DOM loads
 document.addEventListener('DOMContentLoaded', async () => {
     // Determine active nav item or default to dashboard
@@ -16,7 +18,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupNavigation();
     setupSidebarToggle();
     setupForms();
+    setupBalanceToggle();
 });
+
+function setupBalanceToggle() {
+    const toggleBtn = document.getElementById('toggleBalanceBtn');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+            isBalanceHidden = !isBalanceHidden;
+            const icon = document.getElementById('toggleBalanceIcon');
+            if (isBalanceHidden) {
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+            updateBalanceDisplay();
+        });
+    }
+}
+
+function getMaskedBalance(amount) {
+    const formatted = formatMoney(amount);
+    return formatted.replace(/[0-9]/g, '*');
+}
 
 /**
  * Data Loading
@@ -851,8 +877,12 @@ function setupLoanLogic() {
  * Sub-Feature: Transactions & Balances
  */
 function updateBalanceDisplay() {
-    document.getElementById('dashBalance').innerText = formatMoney(currentUser.balance);
-    document.getElementById('transAvailableBal').innerText = formatMoney(currentUser.balance);
+    const displayBal = isBalanceHidden ? getMaskedBalance(currentUser.balance) : formatMoney(currentUser.balance);
+    const dashBalanceEl = document.getElementById('dashBalance');
+    if (dashBalanceEl) dashBalanceEl.innerText = displayBal;
+    
+    const transAvailBalEl = document.getElementById('transAvailableBal');
+    if (transAvailBalEl) transAvailBalEl.innerText = displayBal;
 
     // Zero balance logic
     const zeroMsg = document.getElementById('zeroBalanceMessage');

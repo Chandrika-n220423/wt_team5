@@ -170,7 +170,12 @@ const currentUserId = requireAuth();
                     <div class="cards-row">
                         <div class="dashboard-card balance-card">
                             <div class="card-title">Available Balance</div>
-                            <div class="card-value" id="dashBalance">₹0.00</div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div class="card-value" id="dashBalance">₹0.00</div>
+                                <button type="button" id="toggleBalanceBtn" style="border: none; background: transparent; color: inherit; font-size: 1.2rem; cursor: pointer; padding: 0;">
+                                    <i class="fas fa-eye-slash" id="toggleBalanceIcon"></i>
+                                </button>
+                            </div>
                             <div id="zeroBalanceMessage" style="background: rgba(255,59,48,0.2); color: #fff; padding: 8px 12px; border-radius: 4px; margin-top: 12px; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.3); display: none;">
                                 <i class="fas fa-exclamation-circle" style="margin-right: 6px;"></i>No balance available. Please add money to start transactions.
                             </div>
