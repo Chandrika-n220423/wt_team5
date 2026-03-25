@@ -282,7 +282,7 @@ const currentUserId = requireAuth();
                                 </div>
                                 <div class="form-group" style="margin-bottom: 0;">
                                     <label class="form-label">Phone Number</label>
-                                    <input type="tel" id="profPhone" class="form-control" required>
+                                    <input type="tel" id="profPhone" class="form-control" required maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                 </div>
                                 <div class="form-group" style="margin-bottom: 0;">
                                     <label class="form-label">Date of Birth</label>
@@ -332,7 +332,7 @@ const currentUserId = requireAuth();
                                 <div style="display:flex; gap:12px; align-items:stretch;">
                                     <input type="tel" id="transPhone" class="form-control"
                                         placeholder="Enter 10-digit number" required pattern="[0-9]{10}"
-                                        style="flex:1;">
+                                        style="flex:1;" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                     <button type="button" class="btn btn-outline" id="verifyReceiverBtn"
                                         style="white-space:nowrap; display:flex; align-items:center;">Verify</button>
                                 </div>
