@@ -33,6 +33,8 @@
 
         <!-- LOGIN FORM -->
         <form id="loginForm" onsubmit="handleFinalLogin(event)">
+            <!-- Status Banner for accountant approval notifications -->
+            <div id="loginStatusBanner" style="display:none;"></div>
             <div id="loginError" class="error-message"></div>
             <div id="loginSuccess" class="success-message"></div>
 
@@ -83,6 +85,28 @@
 </div>
 
 <script src="js/auth.js"></script>
+<script>
+    // Show status banner if redirected from registration
+    (function() {
+        const params = new URLSearchParams(window.location.search);
+        const status = params.get('status');
+        if (!status) return;
+
+        const msgs = {
+            pending:  "Your account request is under accountant review. Please wait for approval.",
+            rejected: "Your account request was rejected by the accountant. Please contact the bank for more details.",
+            approved: "Your account has been successfully approved by the accountant. You can now access all banking services."
+        };
+
+        const banner = document.getElementById('loginStatusBanner');
+        if (banner && msgs[status]) {
+            // showStatusBanner is defined in auth.js loaded above
+            showStatusBanner(banner, status, msgs[status]);
+            // Clean URL without reload
+            window.history.replaceState({}, document.title, '/login.html');
+        }
+    })();
+</script>
 
 </body>
 </html>

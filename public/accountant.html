@@ -56,7 +56,37 @@
                 </button>
             </div>
 
+            <!-- ===== NEW REGISTRATION REQUESTS TABLE ===== -->
+            <div class="dashboard-card table-container" style="padding:0; margin-bottom: 32px;">
+                <div style="padding: 24px 32px; border-bottom: 1px solid var(--border-color); background: linear-gradient(135deg, rgba(52,199,89,0.08), rgba(0,113,227,0.05)); border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
+                    <h3 style="margin:0; text-align: center; color: var(--success);">
+                        <i class="fas fa-user-plus" style="margin-right:8px;"></i>New Registration Requests
+                    </h3>
+                    <p style="text-align: center; color: var(--text-light); font-size: 0.85rem; margin-top: 4px;">New users awaiting account activation. Approve to create account or Reject to decline.</p>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="data-table" style="text-align: center; width: 100%;">
+                        <thead>
+                            <tr>
+                                <th style="text-align: center;">Name</th>
+                                <th style="text-align: center;">Email</th>
+                                <th style="text-align: center;">Phone</th>
+                                <th style="text-align: center;">Gender</th>
+                                <th style="text-align: center;">Balance</th>
+                                <th style="text-align: center;">Status</th>
+                                <th style="text-align: center;">Submitted</th>
+                                <th style="text-align: center;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="registrationRequestsTable">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <!-- Pending Deletions Table -->
+
             <div class="dashboard-card table-container" style="padding:0; margin-bottom: 32px;">
                 <div style="padding: 24px 32px; border-bottom: 1px solid var(--border-color); background: #fafafa; border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
                     <h3 style="margin:0; text-align: center; color: var(--danger);">Account Deletion Requests</h3>
@@ -127,9 +157,77 @@
         }
 
         async function loadAccountantData() {
+            loadRegistrationRequests();
             loadDeletionRequests();
             loadProfileRequests();
         }
+
+        // --- Registration Requests (From Backend API) ---
+        async function loadRegistrationRequests() {
+            const tbody = document.getElementById('registrationRequestsTable');
+            tbody.innerHTML = '<tr><td colspan="8" style="color:var(--text-light);">Loading...</td></tr>';
+            try {
+                const res = await fetch('http://localhost:5000/api/accountant/pending-registrations');
+                const data = await res.json();
+
+                tbody.innerHTML = '';
+                if (!data.length) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="color:var(--text-light);">No pending registration requests.</td></tr>';
+                    return;
+                }
+
+                data.forEach(r => {
+                    const date = new Date(r.createdAt).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+                    const statusBadge = r.status === 'pending'
+                        ? '<span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:700;background:rgba(245,166,35,0.18);color:#c47d0e;text-transform:uppercase;">Pending</span>'
+                        : '<span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:700;background:rgba(255,59,48,0.15);color:#cc2d24;text-transform:uppercase;">Rejected</span>';
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td style="font-weight:600;">${r.name}</td>
+                            <td>${r.email}</td>
+                            <td>${r.phone}</td>
+                            <td>${r.gender}</td>
+                            <td style="font-weight:600;">₹${(r.balance || 0).toFixed(2)}</td>
+                            <td>${statusBadge}</td>
+                            <td style="font-size:0.82rem;color:var(--text-light);">${date}</td>
+                            <td>
+                                ${r.status === 'pending' ? `
+                                <button onclick="processRegistration('${r._id}', 'approve')" class="btn" style="background:var(--success);color:white;padding:5px 10px;font-size:0.8rem;border:none;margin-right:6px;border-radius:6px;">
+                                    <i class="fas fa-check"></i> Approve
+                                </button>
+                                <button onclick="processRegistration('${r._id}', 'reject')" class="btn" style="background:var(--danger);color:white;padding:5px 10px;font-size:0.8rem;border:none;border-radius:6px;">
+                                    <i class="fas fa-times"></i> Reject
+                                </button>` : `<span style="color:var(--text-light);font-size:0.85rem;">Processed</span>`}
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch(e) {
+                tbody.innerHTML = '<tr><td colspan="8" style="color:var(--danger);">Failed to load registration requests. Is the server running?</td></tr>';
+                console.error('Failed to load registration requests:', e);
+            }
+        }
+
+        async function processRegistration(id, action) {
+            const label = action === 'approve' ? 'approve' : 'reject';
+            if (!confirm(`Are you sure you want to ${label} this registration request?`)) return;
+
+            try {
+                const res = await fetch(`http://localhost:5000/api/accountant/${action}/${id}`, { method: 'POST' });
+                const data = await res.json();
+                if (res.ok) {
+                    alert(`Registration request ${action === 'approve' ? 'approved! Account is now active.' : 'rejected.'}`);
+                    loadRegistrationRequests(); // refresh
+                } else {
+                    alert(`Error: ${data.message}`);
+                }
+            } catch(e) {
+                alert('Network error. Could not process request.');
+                console.error(e);
+            }
+        }
+
 
         // --- Deletion Requests (From LocalStorage) ---
         function loadDeletionRequests() {

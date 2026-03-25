@@ -3,6 +3,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const Account = require("../models/Account");
+const PendingRequest = require("../models/PendingRequest");
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 
@@ -83,41 +84,47 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "Aadhaar number must be exactly 12 digits" });
     }
 
+    // Check in active users
     const existingUser = await User.findOne({ email });
-
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // Generate unique 10-digit account number start with '10'
+    // Check if already in pending/rejected
+    const existingPending = await PendingRequest.findOne({ email });
+    if (existingPending) {
+      if (existingPending.status === "pending") {
+        return res.status(400).json({ message: "A registration request with this email is already pending approval.", status: "pending" });
+      } else if (existingPending.status === "rejected") {
+        return res.status(400).json({ message: "Your previous registration was rejected. Please contact the bank.", status: "rejected" });
+      }
+    }
+
+    // Generate unique 10-digit account number starting with '10'
     const accountNumber = "10" + Math.floor(10000000 + Math.random() * 90000000).toString();
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = new User({
+    // Save to pending_requests instead of users
+    const pendingReq = new PendingRequest({
       name,
       email,
       phone,
-      balance,
+      balance: balance || 0,
       password: hashedPassword,
       dob,
       aadhaarNumber,
       gender,
-      accountNumber
+      accountNumber,
+      status: "pending"
     });
 
-    await user.save();
+    await pendingReq.save();
 
-    res.json({
-      message: "User registered successfully",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        balance: user.balance,
-        accountNumber: user.accountNumber
-      },
+    res.status(201).json({
+      message: "Registration submitted. Please wait for accountant approval.",
+      status: "pending",
+      email: pendingReq.email
     });
   } catch (error) {
     res.status(500).json({
@@ -134,6 +141,27 @@ router.post("/login", async (req, res) => {
 
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password required" });
+    }
+
+    // Check pending_requests first for status-based UI notifications
+    const pendingReq = await PendingRequest.findOne({ email });
+    if (pendingReq) {
+      const isMatch = await bcrypt.compare(password, pendingReq.password);
+      if (!isMatch) {
+        return res.status(400).json({ message: "Invalid password" });
+      }
+      if (pendingReq.status === "pending") {
+        return res.status(403).json({
+          status: "pending",
+          message: "Your account request is under accountant review. Please wait for approval."
+        });
+      }
+      if (pendingReq.status === "rejected") {
+        return res.status(403).json({
+          status: "rejected",
+          message: "Your account request was rejected by the accountant. Please contact the bank for more details."
+        });
+      }
     }
 
     const user = await User.findOne({ email });
@@ -156,6 +184,7 @@ router.post("/login", async (req, res) => {
 
     res.json({
       message: "Login successful",
+      status: "active",
       token,
       user: {
         id: user._id,

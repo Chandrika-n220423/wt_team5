@@ -23,9 +23,18 @@ async function handleRegistration(e){
   const phone = document.getElementById("regPhone").value.trim();
   const balance = document.getElementById("regBalance").value;
   const password = document.getElementById("regPassword").value;
+  const confirmPassword = document.getElementById("regConfirmPassword")?.value;
   const dob = document.getElementById("regDob").value;
   const aadhaarNumber = document.getElementById("regAadhaar").value.trim();
   const gender = document.getElementById("regGender").value;
+  const errorDiv = document.getElementById("regGlobalError");
+
+  if (confirmPassword !== undefined && password !== confirmPassword) {
+    if (errorDiv) { errorDiv.innerText = "Passwords do not match."; errorDiv.style.display = "block"; }
+    return;
+  }
+
+  if (errorDiv) { errorDiv.style.display = "none"; }
 
   try{
 
@@ -51,14 +60,19 @@ async function handleRegistration(e){
     const data = await response.json();
 
     if(response.ok){
-      alert("Registration successful");
-      window.location.href="dashboard.html";
-    }else{
-      alert(data.message);
+      // Registration submitted — redirect to login with pending status
+      window.location.href = "login.html?status=pending&email=" + encodeURIComponent(email);
+    } else if (data.status === "pending") {
+      if (errorDiv) { errorDiv.innerText = "A registration request with this email is already pending approval."; errorDiv.style.display = "block"; }
+    } else if (data.status === "rejected") {
+      if (errorDiv) { errorDiv.innerText = "Your previous registration was rejected. Please contact the bank."; errorDiv.style.display = "block"; }
+    } else {
+      if (errorDiv) { errorDiv.innerText = data.message || "Registration failed."; errorDiv.style.display = "block"; }
     }
 
   }catch(error){
     console.error(error);
+    if (errorDiv) { errorDiv.innerText = "Server error. Please try again."; errorDiv.style.display = "block"; }
   }
 
 }
@@ -125,8 +139,10 @@ async function handleFinalLogin(e){
     const email = document.getElementById("loginEmail").value.trim();
     const password = document.getElementById("loginPassword").value;
     const errorDiv = document.getElementById("loginError");
+    const statusBanner = document.getElementById("loginStatusBanner");
 
     errorDiv.style.display="none";
+    if (statusBanner) statusBanner.style.display = "none";
 
     if(!email || !password){
         showError(errorDiv,"Please enter email and password");
@@ -145,7 +161,7 @@ async function handleFinalLogin(e){
 
         const data = await response.json();
 
-        if(response.ok){
+        if(response.ok && data.status === "active"){
             // Sync with frontend legacy localStorage array so app.js doesn't crash
             let mockUsers = JSON.parse(localStorage.getItem('nexusUsers')) || [];
             let userId = data.user?.id || data.user?._id || data.userId || data.token;
@@ -166,9 +182,12 @@ async function handleFinalLogin(e){
                  });
                  localStorage.setItem('nexusUsers', JSON.stringify(mockUsers));
             }
-
             startSession(userId, data.token);
-        }else{
+        } else if (response.status === 403 && data.status === "pending") {
+            showStatusBanner(statusBanner, "pending", data.message);
+        } else if (response.status === 403 && data.status === "rejected") {
+            showStatusBanner(statusBanner, "rejected", data.message);
+        } else {
             showError(errorDiv, data.message || "Invalid credentials");
         }
 
@@ -177,6 +196,7 @@ async function handleFinalLogin(e){
     }
 
 }
+
 
 /* ===============================
    START SESSION
@@ -280,6 +300,60 @@ function showError(element,message){
     element.style.display="block";
 
 }
+
+/* ===============================
+   SHOW STATUS BANNER (Accountant Approval)
+================================ */
+
+function showStatusBanner(element, status, message) {
+    if (!element) return;
+
+    const configs = {
+        pending: {
+            bg: "rgba(245, 166, 35, 0.12)",
+            border: "rgba(245, 166, 35, 0.5)",
+            icon: "fa-clock",
+            iconColor: "#f5a623",
+            badgeText: "Pending",
+            badgeBg: "rgba(245, 166, 35, 0.2)",
+            badgeColor: "#c47d0e"
+        },
+        rejected: {
+            bg: "rgba(255, 59, 48, 0.1)",
+            border: "rgba(255, 59, 48, 0.4)",
+            icon: "fa-times-circle",
+            iconColor: "#ff3b30",
+            badgeText: "Rejected",
+            badgeBg: "rgba(255, 59, 48, 0.15)",
+            badgeColor: "#cc2d24"
+        },
+        approved: {
+            bg: "rgba(52, 199, 89, 0.1)",
+            border: "rgba(52, 199, 89, 0.4)",
+            icon: "fa-check-circle",
+            iconColor: "#34c759",
+            badgeText: "Approved",
+            badgeBg: "rgba(52, 199, 89, 0.15)",
+            badgeColor: "#2a9e47"
+        }
+    };
+
+    const c = configs[status] || configs.pending;
+
+    element.innerHTML = `
+        <div style="display:flex; align-items:flex-start; gap:12px;">
+            <i class="fas ${c.icon}" style="color:${c.iconColor}; font-size:1.3rem; margin-top:2px; flex-shrink:0;"></i>
+            <div>
+                <span style="display:inline-block; padding:2px 10px; border-radius:20px; font-size:0.75rem; font-weight:700; letter-spacing:0.5px; background:${c.badgeBg}; color:${c.badgeColor}; margin-bottom:6px; text-transform:uppercase;">
+                    ${c.badgeText}
+                </span>
+                <p style="margin:0; font-size:0.92rem; color:var(--text-main);">${message}</p>
+            </div>
+        </div>
+    `;
+    element.style.cssText = `display:block; background:${c.bg}; border:1px solid ${c.border}; border-radius:10px; padding:14px 16px; margin-bottom:16px;`;
+}
+
 
 /* ===============================
    AUTO CHECK LOGIN

@@ -35,6 +35,7 @@ app.use("/api/transactions", transactionRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/loans", require("./routes/loanRoutes"));
 app.use("/api/issues", require("./routes/issueRoutes"));
+app.use("/api/accountant", require("./routes/accountantRoutes"));
 
 // Test Route
 app.get("/", (req, res) => {
