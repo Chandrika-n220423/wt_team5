@@ -22,15 +22,23 @@ async function handleRegistration(e){
   const email = document.getElementById("regEmail").value.trim();
   const phone = document.getElementById("regPhone").value.trim();
   const balance = document.getElementById("regBalance").value;
-  const password = document.getElementById("regPassword").value;
-  const confirmPassword = document.getElementById("regConfirmPassword")?.value;
+  const mpin = document.getElementById("regMpin").value;
   const dob = document.getElementById("regDob").value;
   const aadhaarNumber = document.getElementById("regAadhaar").value.trim();
   const gender = document.getElementById("regGender").value;
+  const q1 = document.getElementById("regQuestion1").value;
+  const a1 = document.getElementById("regAnswer1").value.trim();
+  const q2 = document.getElementById("regQuestion2").value;
+  const a2 = document.getElementById("regAnswer2").value.trim();
   const errorDiv = document.getElementById("regGlobalError");
 
-  if (confirmPassword !== undefined && password !== confirmPassword) {
-    if (errorDiv) { errorDiv.innerText = "Passwords do not match."; errorDiv.style.display = "block"; }
+  if (!mpin || mpin.length !== 6) {
+      if (errorDiv) { errorDiv.innerText = "Please enter a 6-digit MPIN."; errorDiv.style.display = "block"; }
+      return;
+  }
+
+  if (q1 === q2) {
+    if (errorDiv) { errorDiv.innerText = "Please select two different security questions."; errorDiv.style.display = "block"; }
     return;
   }
 
@@ -49,12 +57,15 @@ async function handleRegistration(e){
         email,
         phone,
         balance,
-        password,
+        mpin,
         dob,
         aadhaarNumber,
-        gender
+        gender,
+        securityQuestions: [
+          { question: q1, answer: a1 },
+          { question: q2, answer: a2 }
+        ]
       })
-
     });
 
     const data = await response.json();
@@ -81,50 +92,129 @@ async function handleRegistration(e){
    FORGOT PASSWORD
 ================================ */
 
-async function handleForgotPassword(e) {
-  e.preventDefault();
+/* ===============================
+   FORGOT MPIN VIA SECURITY QUESTIONS
+================================ */
 
+async function handleFetchQuestions() {
   const email = document.getElementById("forgotEmail").value.trim();
-  const newPassword = document.getElementById("forgotNewPassword").value;
-  const confirmPassword = document.getElementById("forgotConfirmPassword").value;
   const errorDiv = document.getElementById("forgotError");
   const successDiv = document.getElementById("forgotSuccess");
 
   errorDiv.style.display = "none";
   successDiv.style.display = "none";
 
-  if (!email || !newPassword || !confirmPassword) {
-    showError(errorDiv, "All fields are required.");
-    return;
-  }
-
-  if (newPassword !== confirmPassword) {
-    showError(errorDiv, "Passwords do not match.");
+  if (!email) {
+    showError(errorDiv, "Please enter your email.");
     return;
   }
 
   try {
-    const response = await fetch(`${API_URL}/forgot-password`, {
+    const response = await fetch(`${API_URL}/get-security-questions`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ email, newPassword })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: email })
     });
 
     const data = await response.json();
 
     if (response.ok) {
-      successDiv.innerText = "Password reset successfully. Redirecting to login...";
+      document.getElementById("q1Label").innerText = data.questions[0];
+      document.getElementById("q2Label").innerText = data.questions[1];
+      document.getElementById("step1").style.display = "none";
+      document.getElementById("step2").style.display = "block";
+      successDiv.innerText = "Questions fetched successfully.";
+      successDiv.style.display = "block";
+    } else {
+      showError(errorDiv, data.message || "User not found.");
+    }
+  } catch (error) {
+    showError(errorDiv, "Server error. Please try again.");
+  }
+}
+
+async function handleVerifyAnswers() {
+  const email = document.getElementById("forgotEmail").value.trim();
+  const ans1 = document.getElementById("ans1").value.trim();
+  const ans2 = document.getElementById("ans2").value.trim();
+  const errorDiv = document.getElementById("forgotError");
+  const successDiv = document.getElementById("forgotSuccess");
+
+  errorDiv.style.display = "none";
+  successDiv.style.display = "none";
+
+  if (!ans1 || !ans2) {
+    showError(errorDiv, "Please answer both questions.");
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/verify-security-answers`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: email, answers: [ans1, ans2] })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      document.getElementById("step2").style.display = "none";
+      document.getElementById("step3").style.display = "block";
+      successDiv.innerText = "Answers verified. Please set your new MPIN.";
+      successDiv.style.display = "block";
+    } else {
+      showError(errorDiv, data.message || "Invalid answers.");
+    }
+  } catch (error) {
+    showError(errorDiv, "Server error. Please try again.");
+  }
+}
+
+async function handleResetMpin() {
+  const email = document.getElementById("forgotEmail").value.trim();
+  const newMpin = document.getElementById("newMpin").value;
+  const confirmMpin = document.getElementById("confirmMpin").value;
+  const errorDiv = document.getElementById("forgotError");
+  const successDiv = document.getElementById("forgotSuccess");
+
+  errorDiv.style.display = "none";
+  successDiv.style.display = "none";
+
+  if (!newMpin || !confirmMpin) {
+    showError(errorDiv, "Please enter and confirm your new MPIN.");
+    return;
+  }
+
+  if (newMpin !== confirmMpin) {
+    showError(errorDiv, "MPINs do not match.");
+    return;
+  }
+
+  if (newMpin.length !== 6 || !/^\d+$/.test(newMpin)) {
+    showError(errorDiv, "MPIN must be exactly 6 digits.");
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/reset-mpin`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: email, newMPIN: newMpin })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      successDiv.innerText = "MPIN reset successful. Redirecting to login...";
       successDiv.style.display = "block";
       setTimeout(() => {
         window.location.href = "login.html";
       }, 2000);
     } else {
-      showError(errorDiv, data.message || "Failed to reset password.");
+      showError(errorDiv, data.message || "Failed to reset MPIN.");
     }
   } catch (error) {
-    showError(errorDiv, "Server error. Please try again later.");
+    showError(errorDiv, "Server error. Please try again.");
   }
 }
 
@@ -137,15 +227,15 @@ async function handleFinalLogin(e){
     e.preventDefault();
 
     const email = document.getElementById("loginEmail").value.trim();
-    const password = document.getElementById("loginPassword").value;
+    const mpin = document.getElementById("loginMpin").value;
     const errorDiv = document.getElementById("loginError");
     const statusBanner = document.getElementById("loginStatusBanner");
 
     errorDiv.style.display="none";
     if (statusBanner) statusBanner.style.display = "none";
 
-    if(!email || !password){
-        showError(errorDiv,"Please enter email and password");
+    if(!email || !mpin || mpin.length !== 6){
+        showError(errorDiv,"Please enter email and 6-digit MPIN");
         return;
     }
 
@@ -156,7 +246,7 @@ async function handleFinalLogin(e){
             headers:{
                 "Content-Type":"application/json"
             },
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({ email, mpin })
         });
 
         const data = await response.json();
@@ -236,30 +326,6 @@ function logout(){
    PROTECT DASHBOARD
 ================================ */
 function requireAuth(){
-
-    // ✅ Step 1: Check token from URL (Google login)
-    const params = new URLSearchParams(window.location.search);
-    const tokenFromUrl = params.get("token");
-
-    if (tokenFromUrl) {
-        try {
-            const payload = JSON.parse(atob(tokenFromUrl.split('.')[1]));
-
-            const session = {
-                userId: payload.id,
-                token: tokenFromUrl,
-                expiresAt: Date.now() + (1000 * 60 * 60 * 24)
-            };
-
-            localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-
-            // Clean URL
-            window.history.replaceState({}, document.title, "/dashboard.html");
-
-        } catch (err) {
-            console.error("Invalid token from Google");
-        }
-    }
 
     // ✅ Step 2: Normal session check
     const session = JSON.parse(localStorage.getItem(SESSION_KEY));
@@ -359,9 +425,160 @@ function showStatusBanner(element, status, message) {
    AUTO CHECK LOGIN
 ================================ */
 
+/* ===============================
+   RANDOMIZED NUMERIC KEYPAD LOGIC
+   ================================ */
+
+let currentMpinInput = "";
+
+function initializeKeypad() {
+    const keypadContainer = document.getElementById("numericKeypad");
+    if (!keypadContainer) return;
+
+    renderKeypad();
+}
+
+function renderKeypad() {
+    const keypadContainer = document.getElementById("numericKeypad");
+    if (!keypadContainer) return;
+
+    // Numbers 0-9
+    let numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    
+    // Fisher-Yates Shuffle
+    for (let i = numbers.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+    }
+
+    keypadContainer.innerHTML = "";
+
+    // Create buttons for shuffled numbers
+    numbers.forEach(num => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "key-btn";
+        btn.innerText = num;
+        btn.onclick = () => handleKeyClick(num);
+        keypadContainer.appendChild(btn);
+    });
+
+    // Add Clear button
+    const clearBtn = document.createElement("button");
+    clearBtn.type = "button";
+    clearBtn.className = "key-btn action-btn clear-btn";
+    clearBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+    clearBtn.onclick = clearMpin;
+    keypadContainer.appendChild(clearBtn);
+
+    // Add Delete button
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "key-btn action-btn delete-btn";
+    deleteBtn.innerHTML = '<i class="fas fa-backspace"></i>';
+    deleteBtn.onclick = deleteLastDigit;
+    keypadContainer.appendChild(deleteBtn);
+}
+
+function handleKeyClick(num) {
+    if (currentMpinInput.length < 6) {
+        currentMpinInput += num;
+        updateMpinDisplay();
+        
+        // Auto-shuffle on every click for extra security (optional, but SBI does it sometimes)
+        // renderKeypad(); 
+    }
+}
+
+function deleteLastDigit() {
+    currentMpinInput = currentMpinInput.slice(0, -1);
+    updateMpinDisplay();
+}
+
+function clearMpin() {
+    currentMpinInput = "";
+    updateMpinDisplay();
+}
+
+function updateMpinDisplay() {
+    const dots = document.querySelectorAll(".mpin-dot");
+    const mpinHiddenInput = document.getElementById("loginMpin");
+
+    dots.forEach((dot, index) => {
+        if (index < currentMpinInput.length) {
+            dot.classList.add("filled");
+        } else {
+            dot.classList.remove("filled");
+        }
+    });
+
+    if (mpinHiddenInput) {
+        mpinHiddenInput.value = currentMpinInput;
+    }
+}
+
+/* ===============================
+   SECURITY QUESTIONS UI LOGIC
+   ================================ */
+
+function initializeSecurityQuestions() {
+    const q1Select = document.getElementById("regQuestion1");
+    const q2Select = document.getElementById("regQuestion2");
+
+    if (!q1Select || !q2Select) return;
+
+    function updateOptions() {
+        const val1 = q1Select.value;
+        const val2 = q2Select.value;
+
+        // Since the lists are now completely different, we don't strictly need to disable 
+        // options in the other dropdown unless there is overlap.
+        // However, we keep the robust check just in case.
+
+        // Reset both first
+        Array.from(q1Select.options).forEach(opt => {
+            if (opt.value) opt.disabled = false;
+        });
+        Array.from(q2Select.options).forEach(opt => {
+            if (opt.value) opt.disabled = false;
+        });
+
+        // Disable selected in the other (only if the value exists in the other set)
+        if (val1) {
+            const optToDisable = Array.from(q2Select.options).find(opt => opt.value === val1);
+            if (optToDisable) {
+                optToDisable.disabled = true;
+                if (q2Select.value === val1) q2Select.selectedIndex = 0;
+            }
+        }
+        if (val2) {
+            const optToDisable = Array.from(q1Select.options).find(opt => opt.value === val2);
+            if (optToDisable) {
+                optToDisable.disabled = true;
+                if (q1Select.value === val2) q1Select.selectedIndex = 0;
+            }
+        }
+    }
+
+    q1Select.addEventListener("change", updateOptions);
+    q2Select.addEventListener("change", updateOptions);
+    updateOptions();
+}
+
+/* ===============================
+   AUTO INITIALIZE
+   ================================ */
+
 if(window.location.pathname.includes("login.html") ||
    window.location.pathname.includes("register.html")){
 
     redirectIfAuthenticated();
-
+    
+    if (window.location.pathname.includes("login.html")) {
+        window.addEventListener('DOMContentLoaded', initializeKeypad);
+    }
+    
+    if (window.location.pathname.includes("register.html")) {
+        window.addEventListener('DOMContentLoaded', initializeSecurityQuestions);
+    }
 }

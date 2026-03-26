@@ -10,11 +10,6 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-  googleId: {
-    type: String,
-    unique: true,
-    sparse: true
-  },
   phone: {
     type: String,
     required: true
@@ -23,7 +18,7 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  password: {
+  mpin: {
     type: String,
     required: true
   },
@@ -46,6 +41,19 @@ const userSchema = new mongoose.Schema({
     type: String,
     unique: true,
     required: true
+  },
+  securityQuestions: [
+    {
+      question: { type: String, required: true },
+      answer: { type: String, required: true } // hashed using bcrypt
+    }
+  ],
+  failedAttempts: {
+    type: Number,
+    default: 0
+  },
+  lockUntil: {
+    type: Date
   }
 });
 

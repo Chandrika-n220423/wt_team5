@@ -29,12 +29,13 @@ router.post("/approve/:id", async (req, res) => {
       name: pendingReq.name,
       email: pendingReq.email,
       phone: pendingReq.phone,
-      password: pendingReq.password,
+      mpin: pendingReq.mpin,
       balance: pendingReq.balance,
       dob: pendingReq.dob,
       aadhaarNumber: pendingReq.aadhaarNumber,
       gender: pendingReq.gender,
-      accountNumber: pendingReq.accountNumber
+      accountNumber: pendingReq.accountNumber,
+      securityQuestions: pendingReq.securityQuestions
     });
     await user.save();
 

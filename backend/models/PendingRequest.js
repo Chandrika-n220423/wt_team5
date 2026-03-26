@@ -4,7 +4,7 @@ const pendingRequestSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   phone: { type: String, required: true },
-  password: { type: String, required: true }, // hashed
+  mpin: { type: String, required: true }, // hashed 6-digit MPIN
   balance: { type: Number, default: 0 },
   dob: { type: Date, required: true },
   aadhaarNumber: { type: String, required: true, minlength: 12, maxlength: 12 },
@@ -15,6 +15,12 @@ const pendingRequestSchema = new mongoose.Schema({
     enum: ["pending", "rejected"],
     default: "pending"
   },
+  securityQuestions: [
+    {
+      question: { type: String, required: true },
+      answer: { type: String, required: true } // hashed using bcrypt
+    }
+  ],
   createdAt: { type: Date, default: Date.now }
 });
 

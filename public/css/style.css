@@ -776,6 +776,21 @@ footer {
     }
 }
 
+.forgot-step {
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .success-pop-anim {
     animation: successPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     display: inline-block;
@@ -999,4 +1014,99 @@ body.dark-mode .aurex-logo {
 
 body.dark-mode .custom-logo-img {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+/* ==========================================================================
+   MPIN & Randomized Keypad Styles
+   ========================================================================== */
+.mpin-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.mpin-display {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.mpin-dot {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    transition: var(--transition);
+    background-color: transparent;
+}
+
+.mpin-dot.filled {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    transform: scale(1.1);
+    box-shadow: 0 0 10px rgba(10, 37, 64, 0.2);
+}
+
+.numeric-keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    width: 100%;
+    max-width: 300px;
+}
+
+.key-btn {
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 1px solid var(--border-color);
+    background: #ffffff;
+    color: var(--primary);
+    font-size: 1.25rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-sm);
+}
+
+.key-btn:hover {
+    background-color: #f8fafc;
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.key-btn:active {
+    transform: translateY(0);
+    background-color: #f1f5f9;
+}
+
+.key-btn.action-btn {
+    background-color: #f8fafc;
+    font-size: 1rem;
+}
+
+.key-btn.delete-btn:hover {
+    color: var(--danger);
+    border-color: var(--danger);
+}
+
+.key-btn.clear-btn:hover {
+    color: var(--warning);
+    border-color: var(--warning);
+}
+
+/* Dark mode adjustments for keypad */
+body.dark-mode .key-btn {
+    background: #1e293b;
+    border-color: #334155;
+    color: #f8fafc;
+}
+
+body.dark-mode .key-btn:hover {
+    background: #334155;
+    border-color: var(--secondary);
 }

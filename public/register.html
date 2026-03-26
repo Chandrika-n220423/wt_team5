@@ -65,18 +65,51 @@
                         <input type="number" id="regBalance" class="form-control" placeholder="1000" min="0" required>
                     </div>
 
-                    <div class="form-group" style="margin-bottom:0;">
-                        <label class="form-label" style="text-align:left;">Password</label>
-                        <input type="password" id="regPassword" class="form-control" placeholder="Create strong password" required minlength="6">
-                        <div class="password-strength">
-                            <div class="strength-bar" id="strengthBar"></div>
-                        </div>
+                    <div class="form-group" style="margin-bottom:0; grid-column: 1 / -1;">
+                        <label class="form-label" style="text-align:left;">Create 6-Digit MPIN</label>
+                        <input type="password" id="regMpin" class="form-control" placeholder="Enter 6-digit MPIN" required 
+                               pattern="[0-9]{6}" maxlength="6" inputmode="numeric" 
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                        <small style="color:var(--text-light); font-size:0.8rem;">Used for secure login</small>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:0; grid-column: 1 / -1;">
+                        <h3 style="color:var(--text-main); font-size:1.1rem; margin-bottom:15px; border-bottom:1px solid var(--border-color); padding-bottom:10px;">Security Questions</h3>
+                        <p style="color:var(--text-light); font-size:0.85rem; margin-bottom:15px;">Required for account recovery and MPIN reset.</p>
                     </div>
 
                     <div class="form-group" style="margin-bottom:0;">
-                        <label class="form-label" style="text-align:left;">Confirm Password</label>
-                        <input type="password" id="regConfirmPassword" class="form-control" placeholder="Confirm password" required>
-                        <div class="error-message" id="passMismatchError">Passwords do not match</div>
+                        <label class="form-label" style="text-align:left;">Security Question 1</label>
+                        <select id="regQuestion1" class="form-control" required>
+                            <option value="" disabled selected>Select Question 1</option>
+                            <option value="What is your mother's maiden name?">What is your mother's maiden name?</option>
+                            <option value="In what city were you born?">In what city were you born?</option>
+                            <option value="What was the name of your first school?">What was the name of your first school?</option>
+                            <option value="What is your father's middle name?">What is your father's middle name?</option>
+                            <option value="What was the name of your first boss?">What was the name of your first boss?</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" style="text-align:left;">Answer 1</label>
+                        <input type="text" id="regAnswer1" class="form-control" placeholder="Your Answer" required>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" style="text-align:left;">Security Question 2</label>
+                        <select id="regQuestion2" class="form-control" required>
+                            <option value="" disabled selected>Select Question 2</option>
+                            <option value="What was the name of your first pet?">What was the name of your first pet?</option>
+                            <option value="What was the make of your first car?">What was the make of your first car?</option>
+                            <option value="What was your favorite subject in school?">What was your favorite subject in school?</option>
+                            <option value="What is your favorite movie of all time?">What is your favorite movie of all time?</option>
+                            <option value="What is the name of your favorite childhood friend?">What is the name of your favorite childhood friend?</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" style="text-align:left;">Answer 2</label>
+                        <input type="text" id="regAnswer2" class="form-control" placeholder="Your Answer" required>
                     </div>
                 </div>
 
@@ -95,16 +128,5 @@
 
     <!-- Script specifically for auth functions will be linked here -->
     <script src="js/auth.js"></script>
-    <script>
-        // Password strength meter visual
-        document.getElementById('regPassword').addEventListener('input', function(e) {
-            const val = e.target.value;
-            const bar = document.getElementById('strengthBar');
-            if(val.length === 0) { bar.style.width = '0'; }
-            else if(val.length < 6) { bar.style.width = '33%'; bar.style.backgroundColor = 'var(--danger)'; }
-            else if(val.length < 10) { bar.style.width = '66%'; bar.style.backgroundColor = 'var(--warning)'; }
-            else { bar.style.width = '100%'; bar.style.backgroundColor = 'var(--success)'; }
-        });
-    </script>
 </body>
 </html>

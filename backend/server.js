@@ -1,6 +1,5 @@
 require("dotenv").config();
 const express = require("express");
-const passport = require("passport");
 const cors = require("cors");
 const path = require("path"); // ✅ ADD THIS
 
@@ -25,8 +24,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "../public")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Passport
-app.use(passport.initialize());
 
 // Routes
 app.use("/api", authRoutes);
