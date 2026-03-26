@@ -19,7 +19,60 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupSidebarToggle();
     setupForms();
     setupBalanceToggle();
+    initBranchMap();
 });
+
+function initBranchMap() {
+    const mapEl = document.getElementById('branchMap');
+    if (!mapEl) return;
+
+    // Default center (India)
+    const map = L.map('branchMap').setView([17.0, 79.0], 6);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const branches = [
+        { id: 'vijayawada', name: 'Vijayawada', coords: [16.5062, 80.6480] },
+        { id: 'vizag', name: 'Visakhapatnam', coords: [17.6868, 83.2185] },
+        { id: 'Guntur', name: 'Guntur', coords: [16.3067, 80.4365] },
+        { id: 'Hyderabad', name: 'Hyderabad', coords: [17.3850, 78.4867] },
+        { id: 'Bangalore', name: 'Bangalore', coords: [12.9716, 77.5946] }
+    ];
+
+    let selectedBranch = '';
+    // Use the logged in user's saved branch if available
+    if (typeof currentUser !== 'undefined' && currentUser && currentUser.branch) {
+        selectedBranch = currentUser.branch;
+    } else {
+        selectedBranch = localStorage.getItem('selectedBranch') || '';
+    }
+
+    branches.forEach(b => {
+        const isSelected = selectedBranch.toLowerCase() === b.id.toLowerCase();
+        
+        const markerColor = isSelected ? '#34c759' : '#ff3b30'; // green or red
+        
+        const marker = L.circleMarker(b.coords, {
+            radius: 10,
+            fillColor: markerColor,
+            color: '#ffffff',
+            weight: 3,
+            opacity: 1,
+            fillOpacity: 0.9
+        }).addTo(map);
+        
+        let popupText = `<b>${b.name} Branch</b>`;
+        if (isSelected) popupText += `<br><span style="color:green; font-weight:bold;">(Your Selected Branch)</span>`;
+        
+        marker.bindPopup(popupText);
+        
+        if (isSelected) {
+            map.setView(b.coords, 8);
+        }
+    });
+}
 
 function setupBalanceToggle() {
     const toggleBtn = document.getElementById('toggleBalanceBtn');
@@ -316,6 +369,7 @@ function populateProfileForm() {
     if(document.getElementById('profGender')) document.getElementById('profGender').value = currentUser.gender || '';
     if(document.getElementById('profAccount')) document.getElementById('profAccount').value = currentUser.accountNumber || '';
     if(document.getElementById('profAadhaar')) document.getElementById('profAadhaar').value = currentUser.aadhaarNumber || '';
+    if(document.getElementById('profBranch')) document.getElementById('profBranch').value = currentUser.branch || localStorage.getItem('selectedBranch') || 'N/A';
 }
 
 function setupForms() {

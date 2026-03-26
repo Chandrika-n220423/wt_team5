@@ -47,3 +47,8 @@ const PORT = 5000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+app.post("/register", (req, res) => {
+    console.log("Request received");
+    console.log(req.body);
+    res.send("Registered");
+});

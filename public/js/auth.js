@@ -14,27 +14,64 @@ const SESSION_KEY = "nexusSession";
 
 
 
-async function handleRegistration(e){
+async function handleRegistration(e) {
 
   e.preventDefault();
 
-  const name = document.getElementById("regName").value.trim();
-  const email = document.getElementById("regEmail").value.trim();
-  const phone = document.getElementById("regPhone").value.trim();
-  const balance = document.getElementById("regBalance").value;
-  const mpin = document.getElementById("regMpin").value;
-  const dob = document.getElementById("regDob").value;
-  const aadhaarNumber = document.getElementById("regAadhaar").value.trim();
-  const gender = document.getElementById("regGender").value;
-  const q1 = document.getElementById("regQuestion1").value;
-  const a1 = document.getElementById("regAnswer1").value.trim();
-  const q2 = document.getElementById("regQuestion2").value;
-  const a2 = document.getElementById("regAnswer2").value.trim();
+  const name = document.getElementById("regName")?.value.trim() || "";
+  const email = document.getElementById("regEmail")?.value.trim() || "";
+  const phone = document.getElementById("regPhone")?.value.trim() || "";
+  const balance = document.getElementById("regBalance")?.value || "";
+  const mpin = document.getElementById("regMpin")?.value || "";
+  const password = document.getElementById("regPassword")?.value || "";
+  const dob = document.getElementById("regDob")?.value || "";
+  const aadhaarNumber = document.getElementById("regAadhaar")?.value.trim() || "";
+  const gender = document.getElementById("regGender")?.value || "";
+  const q1 = document.getElementById("regQuestion1")?.value || "";
+  const a1 = document.getElementById("regAnswer1")?.value.trim() || "";
+  const q2 = document.getElementById("regQuestion2")?.value || "";
+  const a2 = document.getElementById("regAnswer2")?.value.trim() || "";
+
+  // New branch fields
+  const branch = document.getElementById("regBranch")?.value || "";
+  const branchAddress = document.getElementById("regBranchAddress")?.value || "";
+  const branchPincode = document.getElementById("regBranchPincode")?.value || "";
+
+  if (branch) {
+    localStorage.setItem('selectedBranch', branch);
+  }
+
   const errorDiv = document.getElementById("regGlobalError");
 
-  if (!mpin || mpin.length !== 6) {
+  // Validate Age (Must be 18+)
+  if (!dob) {
+    if (errorDiv) { errorDiv.innerText = "Please enter your Date of Birth."; errorDiv.style.display = "block"; }
+    return;
+  } else {
+    const dobDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - dobDate.getFullYear();
+    const m = today.getMonth() - dobDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dobDate.getDate())) {
+      age--;
+    }
+    if (age < 18) {
+      if (errorDiv) { errorDiv.innerText = "You must be at least 18 years old to register."; errorDiv.style.display = "block"; }
+      return;
+    }
+  }
+
+  // Only check MPIN if the field exists, otherwise use password
+  if (document.getElementById("regMpin")) {
+    if (!mpin || mpin.length !== 6) {
       if (errorDiv) { errorDiv.innerText = "Please enter a 6-digit MPIN."; errorDiv.style.display = "block"; }
       return;
+    }
+  } else if (document.getElementById("regPassword")) {
+    if (!password || password.length < 6) {
+      if (errorDiv) { errorDiv.innerText = "Please enter a valid password (min 6 chars)."; errorDiv.style.display = "block"; }
+      return;
+    }
   }
 
   if (q1 === q2) {
@@ -44,13 +81,13 @@ async function handleRegistration(e){
 
   if (errorDiv) { errorDiv.style.display = "none"; }
 
-  try{
+  try {
 
-    const response = await fetch(`${API_URL}/register`,{
+    const response = await fetch(`${API_URL}/register`, {
 
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json"
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
         name,
@@ -58,9 +95,13 @@ async function handleRegistration(e){
         phone,
         balance,
         mpin,
+        password,
         dob,
         aadhaarNumber,
         gender,
+        branch,
+        branchAddress,
+        branchPincode,
         securityQuestions: [
           { question: q1, answer: a1 },
           { question: q2, answer: a2 }
@@ -68,9 +109,20 @@ async function handleRegistration(e){
       })
     });
 
-    const data = await response.json();
+    let data;
+    try {
+      const textResponse = await response.text();
+      try {
+        data = JSON.parse(textResponse);
+      } catch (e) {
+        // Fallback for when backend just sends plain text like "Registered"
+        data = { status: response.ok ? "active" : "error", message: textResponse };
+      }
+    } catch (e) {
+      data = {};
+    }
 
-    if(response.ok){
+    if (response.ok || data.message === "Registered") {
       // Registration submitted — redirect to login with pending status
       window.location.href = "login.html?status=pending&email=" + encodeURIComponent(email);
     } else if (data.status === "pending") {
@@ -81,7 +133,7 @@ async function handleRegistration(e){
       if (errorDiv) { errorDiv.innerText = data.message || "Registration failed."; errorDiv.style.display = "block"; }
     }
 
-  }catch(error){
+  } catch (error) {
     console.error(error);
     if (errorDiv) { errorDiv.innerText = "Server error. Please try again."; errorDiv.style.display = "block"; }
   }
@@ -222,68 +274,72 @@ async function handleResetMpin() {
    LOGIN WITH PASSWORD
 ================================ */
 
-async function handleFinalLogin(e){
+async function handleFinalLogin(e) {
 
-    e.preventDefault();
+  e.preventDefault();
 
-    const email = document.getElementById("loginEmail").value.trim();
-    const mpin = document.getElementById("loginMpin").value;
-    const errorDiv = document.getElementById("loginError");
-    const statusBanner = document.getElementById("loginStatusBanner");
+  const email = document.getElementById("loginEmail").value.trim();
+  const mpin = document.getElementById("loginMpin").value;
+  const errorDiv = document.getElementById("loginError");
+  const statusBanner = document.getElementById("loginStatusBanner");
 
-    errorDiv.style.display="none";
-    if (statusBanner) statusBanner.style.display = "none";
+  errorDiv.style.display = "none";
+  if (statusBanner) statusBanner.style.display = "none";
 
-    if(!email || !mpin || mpin.length !== 6){
-        showError(errorDiv,"Please enter email and 6-digit MPIN");
-        return;
-    }
+  if (!email || !mpin || mpin.length !== 6) {
+    showError(errorDiv, "Please enter email and 6-digit MPIN");
+    return;
+  }
 
-    try{
+  try {
 
-        const response = await fetch(`${API_URL}/login`,{
-            method:"POST",
-            headers:{
-                "Content-Type":"application/json"
-            },
-            body: JSON.stringify({ email, mpin })
+    const response = await fetch(`${API_URL}/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email, mpin })
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.status === "active") {
+      // Sync with frontend legacy localStorage array so app.js doesn't crash
+      let mockUsers = JSON.parse(localStorage.getItem('nexusUsers')) || [];
+      let userId = data.user?.id || data.user?._id || data.userId || data.token;
+      let existing = mockUsers.find(u => u.id === userId);
+      if (!existing && data.user) {
+        mockUsers.push({
+          id: userId,
+          name: data.user.name,
+          email: data.user.email,
+          phone: data.user.phone,
+          balance: data.user.balance || 0,
+          dob: data.user.dob,
+          aadhaarNumber: data.user.aadhaarNumber,
+          gender: data.user.gender,
+          branch: localStorage.getItem('selectedBranch') || data.user.branch || '',
+          accountNumber: data.user.accountNumber,
+          transactions: [],
+          notifications: []
         });
-
-        const data = await response.json();
-
-        if(response.ok && data.status === "active"){
-            // Sync with frontend legacy localStorage array so app.js doesn't crash
-            let mockUsers = JSON.parse(localStorage.getItem('nexusUsers')) || [];
-            let userId = data.user?.id || data.user?._id || data.userId || data.token;
-            let existing = mockUsers.find(u => u.id === userId);
-            if (!existing && data.user) {
-                 mockUsers.push({
-                     id: userId,
-                     name: data.user.name,
-                     email: data.user.email,
-                     phone: data.user.phone,
-                     balance: data.user.balance || 0,
-                     dob: data.user.dob,
-                     aadhaarNumber: data.user.aadhaarNumber,
-                     gender: data.user.gender,
-                     accountNumber: data.user.accountNumber,
-                     transactions: [],
-                     notifications: []
-                 });
-                 localStorage.setItem('nexusUsers', JSON.stringify(mockUsers));
-            }
-            startSession(userId, data.token);
-        } else if (response.status === 403 && data.status === "pending") {
-            showStatusBanner(statusBanner, "pending", data.message);
-        } else if (response.status === 403 && data.status === "rejected") {
-            showStatusBanner(statusBanner, "rejected", data.message);
-        } else {
-            showError(errorDiv, data.message || "Invalid credentials");
-        }
-
-    }catch(err){
-        showError(errorDiv,"Server error. Please try again later.");
+        localStorage.setItem('nexusUsers', JSON.stringify(mockUsers));
+      } else if (existing) {
+          existing.branch = localStorage.getItem('selectedBranch') || existing.branch || '';
+          localStorage.setItem('nexusUsers', JSON.stringify(mockUsers));
+      }
+      startSession(userId, data.token);
+    } else if (response.status === 403 && data.status === "pending") {
+      showStatusBanner(statusBanner, "pending", data.message);
+    } else if (response.status === 403 && data.status === "rejected") {
+      showStatusBanner(statusBanner, "rejected", data.message);
+    } else {
+      showError(errorDiv, data.message || "Invalid credentials");
     }
+
+  } catch (err) {
+    showError(errorDiv, "Server error. Please try again later.");
+  }
 
 }
 
@@ -292,21 +348,21 @@ async function handleFinalLogin(e){
    START SESSION
 ================================ */
 
-function startSession(userId, tokenstr){
+function startSession(userId, tokenstr) {
 
-    const token = tokenstr || ("token_" + Math.random().toString(36).substr(2));
+  const token = tokenstr || ("token_" + Math.random().toString(36).substr(2));
 
-    const session = {
+  const session = {
 
-        userId:userId,
-        token:token,
-        expiresAt: Date.now() + (1000 * 60 * 60 * 24) // 24 hours to match backend expiresIn: "1d"
+    userId: userId,
+    token: token,
+    expiresAt: Date.now() + (1000 * 60 * 60 * 24) // 24 hours to match backend expiresIn: "1d"
 
-    };
+  };
 
-    localStorage.setItem(SESSION_KEY,JSON.stringify(session));
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
 
-    window.location.href="dashboard.html";
+  window.location.href = "dashboard.html";
 
 }
 
@@ -314,44 +370,44 @@ function startSession(userId, tokenstr){
    LOGOUT
 ================================ */
 
-function logout(){
+function logout() {
 
-    localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(SESSION_KEY);
 
-    window.location.href="login.html";
+  window.location.href = "login.html";
 
 }
 
 /* ===============================
    PROTECT DASHBOARD
 ================================ */
-function requireAuth(){
+function requireAuth() {
 
-    // ✅ Step 2: Normal session check
-    const session = JSON.parse(localStorage.getItem(SESSION_KEY));
+  // ✅ Step 2: Normal session check
+  const session = JSON.parse(localStorage.getItem(SESSION_KEY));
 
-    if(!session || Date.now() > session.expiresAt){
-        localStorage.removeItem(SESSION_KEY);
-        window.location.href="login.html";
-        return null;
-    }
+  if (!session || Date.now() > session.expiresAt) {
+    localStorage.removeItem(SESSION_KEY);
+    window.location.href = "login.html";
+    return null;
+  }
 
-    return session.userId;
+  return session.userId;
 }
 
 /* ===============================
    REDIRECT IF ALREADY LOGIN
 ================================ */
 
-function redirectIfAuthenticated(){
+function redirectIfAuthenticated() {
 
-    const session = JSON.parse(localStorage.getItem(SESSION_KEY));
+  const session = JSON.parse(localStorage.getItem(SESSION_KEY));
 
-    if(session && Date.now() < session.expiresAt){
+  if (session && Date.now() < session.expiresAt) {
 
-        window.location.href="dashboard.html";
+    window.location.href = "dashboard.html";
 
-    }
+  }
 
 }
 
@@ -359,11 +415,11 @@ function redirectIfAuthenticated(){
    SHOW ERROR
 ================================ */
 
-function showError(element,message){
+function showError(element, message) {
 
-    element.innerText = message;
+  element.innerText = message;
 
-    element.style.display="block";
+  element.style.display = "block";
 
 }
 
@@ -372,41 +428,41 @@ function showError(element,message){
 ================================ */
 
 function showStatusBanner(element, status, message) {
-    if (!element) return;
+  if (!element) return;
 
-    const configs = {
-        pending: {
-            bg: "rgba(245, 166, 35, 0.12)",
-            border: "rgba(245, 166, 35, 0.5)",
-            icon: "fa-clock",
-            iconColor: "#f5a623",
-            badgeText: "Pending",
-            badgeBg: "rgba(245, 166, 35, 0.2)",
-            badgeColor: "#c47d0e"
-        },
-        rejected: {
-            bg: "rgba(255, 59, 48, 0.1)",
-            border: "rgba(255, 59, 48, 0.4)",
-            icon: "fa-times-circle",
-            iconColor: "#ff3b30",
-            badgeText: "Rejected",
-            badgeBg: "rgba(255, 59, 48, 0.15)",
-            badgeColor: "#cc2d24"
-        },
-        approved: {
-            bg: "rgba(52, 199, 89, 0.1)",
-            border: "rgba(52, 199, 89, 0.4)",
-            icon: "fa-check-circle",
-            iconColor: "#34c759",
-            badgeText: "Approved",
-            badgeBg: "rgba(52, 199, 89, 0.15)",
-            badgeColor: "#2a9e47"
-        }
-    };
+  const configs = {
+    pending: {
+      bg: "rgba(245, 166, 35, 0.12)",
+      border: "rgba(245, 166, 35, 0.5)",
+      icon: "fa-clock",
+      iconColor: "#f5a623",
+      badgeText: "Pending",
+      badgeBg: "rgba(245, 166, 35, 0.2)",
+      badgeColor: "#c47d0e"
+    },
+    rejected: {
+      bg: "rgba(255, 59, 48, 0.1)",
+      border: "rgba(255, 59, 48, 0.4)",
+      icon: "fa-times-circle",
+      iconColor: "#ff3b30",
+      badgeText: "Rejected",
+      badgeBg: "rgba(255, 59, 48, 0.15)",
+      badgeColor: "#cc2d24"
+    },
+    approved: {
+      bg: "rgba(52, 199, 89, 0.1)",
+      border: "rgba(52, 199, 89, 0.4)",
+      icon: "fa-check-circle",
+      iconColor: "#34c759",
+      badgeText: "Approved",
+      badgeBg: "rgba(52, 199, 89, 0.15)",
+      badgeColor: "#2a9e47"
+    }
+  };
 
-    const c = configs[status] || configs.pending;
+  const c = configs[status] || configs.pending;
 
-    element.innerHTML = `
+  element.innerHTML = `
         <div style="display:flex; align-items:flex-start; gap:12px;">
             <i class="fas ${c.icon}" style="color:${c.iconColor}; font-size:1.3rem; margin-top:2px; flex-shrink:0;"></i>
             <div>
@@ -417,7 +473,7 @@ function showStatusBanner(element, status, message) {
             </div>
         </div>
     `;
-    element.style.cssText = `display:block; background:${c.bg}; border:1px solid ${c.border}; border-radius:10px; padding:14px 16px; margin-bottom:16px;`;
+  element.style.cssText = `display:block; background:${c.bg}; border:1px solid ${c.border}; border-radius:10px; padding:14px 16px; margin-bottom:16px;`;
 }
 
 
@@ -432,89 +488,89 @@ function showStatusBanner(element, status, message) {
 let currentMpinInput = "";
 
 function initializeKeypad() {
-    const keypadContainer = document.getElementById("numericKeypad");
-    if (!keypadContainer) return;
+  const keypadContainer = document.getElementById("numericKeypad");
+  if (!keypadContainer) return;
 
-    renderKeypad();
+  renderKeypad();
 }
 
 function renderKeypad() {
-    const keypadContainer = document.getElementById("numericKeypad");
-    if (!keypadContainer) return;
+  const keypadContainer = document.getElementById("numericKeypad");
+  if (!keypadContainer) return;
 
-    // Numbers 0-9
-    let numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-    
-    // Fisher-Yates Shuffle
-    for (let i = numbers.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
-    }
+  // Numbers 0-9
+  let numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
-    keypadContainer.innerHTML = "";
+  // Fisher-Yates Shuffle
+  for (let i = numbers.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+  }
 
-    // Create buttons for shuffled numbers
-    numbers.forEach(num => {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "key-btn";
-        btn.innerText = num;
-        btn.onclick = () => handleKeyClick(num);
-        keypadContainer.appendChild(btn);
-    });
+  keypadContainer.innerHTML = "";
 
-    // Add Clear button
-    const clearBtn = document.createElement("button");
-    clearBtn.type = "button";
-    clearBtn.className = "key-btn action-btn clear-btn";
-    clearBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
-    clearBtn.onclick = clearMpin;
-    keypadContainer.appendChild(clearBtn);
+  // Create buttons for shuffled numbers
+  numbers.forEach(num => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "key-btn";
+    btn.innerText = num;
+    btn.onclick = () => handleKeyClick(num);
+    keypadContainer.appendChild(btn);
+  });
 
-    // Add Delete button
-    const deleteBtn = document.createElement("button");
-    deleteBtn.type = "button";
-    deleteBtn.className = "key-btn action-btn delete-btn";
-    deleteBtn.innerHTML = '<i class="fas fa-backspace"></i>';
-    deleteBtn.onclick = deleteLastDigit;
-    keypadContainer.appendChild(deleteBtn);
+  // Add Clear button
+  const clearBtn = document.createElement("button");
+  clearBtn.type = "button";
+  clearBtn.className = "key-btn action-btn clear-btn";
+  clearBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+  clearBtn.onclick = clearMpin;
+  keypadContainer.appendChild(clearBtn);
+
+  // Add Delete button
+  const deleteBtn = document.createElement("button");
+  deleteBtn.type = "button";
+  deleteBtn.className = "key-btn action-btn delete-btn";
+  deleteBtn.innerHTML = '<i class="fas fa-backspace"></i>';
+  deleteBtn.onclick = deleteLastDigit;
+  keypadContainer.appendChild(deleteBtn);
 }
 
 function handleKeyClick(num) {
-    if (currentMpinInput.length < 6) {
-        currentMpinInput += num;
-        updateMpinDisplay();
-        
-        // Auto-shuffle on every click for extra security (optional, but SBI does it sometimes)
-        // renderKeypad(); 
-    }
+  if (currentMpinInput.length < 6) {
+    currentMpinInput += num;
+    updateMpinDisplay();
+
+    // Auto-shuffle on every click for extra security (optional, but SBI does it sometimes)
+    // renderKeypad(); 
+  }
 }
 
 function deleteLastDigit() {
-    currentMpinInput = currentMpinInput.slice(0, -1);
-    updateMpinDisplay();
+  currentMpinInput = currentMpinInput.slice(0, -1);
+  updateMpinDisplay();
 }
 
 function clearMpin() {
-    currentMpinInput = "";
-    updateMpinDisplay();
+  currentMpinInput = "";
+  updateMpinDisplay();
 }
 
 function updateMpinDisplay() {
-    const dots = document.querySelectorAll(".mpin-dot");
-    const mpinHiddenInput = document.getElementById("loginMpin");
+  const dots = document.querySelectorAll(".mpin-dot");
+  const mpinHiddenInput = document.getElementById("loginMpin");
 
-    dots.forEach((dot, index) => {
-        if (index < currentMpinInput.length) {
-            dot.classList.add("filled");
-        } else {
-            dot.classList.remove("filled");
-        }
-    });
-
-    if (mpinHiddenInput) {
-        mpinHiddenInput.value = currentMpinInput;
+  dots.forEach((dot, index) => {
+    if (index < currentMpinInput.length) {
+      dot.classList.add("filled");
+    } else {
+      dot.classList.remove("filled");
     }
+  });
+
+  if (mpinHiddenInput) {
+    mpinHiddenInput.value = currentMpinInput;
+  }
 }
 
 /* ===============================
@@ -522,63 +578,63 @@ function updateMpinDisplay() {
    ================================ */
 
 function initializeSecurityQuestions() {
-    const q1Select = document.getElementById("regQuestion1");
-    const q2Select = document.getElementById("regQuestion2");
+  const q1Select = document.getElementById("regQuestion1");
+  const q2Select = document.getElementById("regQuestion2");
 
-    if (!q1Select || !q2Select) return;
+  if (!q1Select || !q2Select) return;
 
-    function updateOptions() {
-        const val1 = q1Select.value;
-        const val2 = q2Select.value;
+  function updateOptions() {
+    const val1 = q1Select.value;
+    const val2 = q2Select.value;
 
-        // Since the lists are now completely different, we don't strictly need to disable 
-        // options in the other dropdown unless there is overlap.
-        // However, we keep the robust check just in case.
+    // Since the lists are now completely different, we don't strictly need to disable 
+    // options in the other dropdown unless there is overlap.
+    // However, we keep the robust check just in case.
 
-        // Reset both first
-        Array.from(q1Select.options).forEach(opt => {
-            if (opt.value) opt.disabled = false;
-        });
-        Array.from(q2Select.options).forEach(opt => {
-            if (opt.value) opt.disabled = false;
-        });
+    // Reset both first
+    Array.from(q1Select.options).forEach(opt => {
+      if (opt.value) opt.disabled = false;
+    });
+    Array.from(q2Select.options).forEach(opt => {
+      if (opt.value) opt.disabled = false;
+    });
 
-        // Disable selected in the other (only if the value exists in the other set)
-        if (val1) {
-            const optToDisable = Array.from(q2Select.options).find(opt => opt.value === val1);
-            if (optToDisable) {
-                optToDisable.disabled = true;
-                if (q2Select.value === val1) q2Select.selectedIndex = 0;
-            }
-        }
-        if (val2) {
-            const optToDisable = Array.from(q1Select.options).find(opt => opt.value === val2);
-            if (optToDisable) {
-                optToDisable.disabled = true;
-                if (q1Select.value === val2) q1Select.selectedIndex = 0;
-            }
-        }
+    // Disable selected in the other (only if the value exists in the other set)
+    if (val1) {
+      const optToDisable = Array.from(q2Select.options).find(opt => opt.value === val1);
+      if (optToDisable) {
+        optToDisable.disabled = true;
+        if (q2Select.value === val1) q2Select.selectedIndex = 0;
+      }
     }
+    if (val2) {
+      const optToDisable = Array.from(q1Select.options).find(opt => opt.value === val2);
+      if (optToDisable) {
+        optToDisable.disabled = true;
+        if (q1Select.value === val2) q1Select.selectedIndex = 0;
+      }
+    }
+  }
 
-    q1Select.addEventListener("change", updateOptions);
-    q2Select.addEventListener("change", updateOptions);
-    updateOptions();
+  q1Select.addEventListener("change", updateOptions);
+  q2Select.addEventListener("change", updateOptions);
+  updateOptions();
 }
 
 /* ===============================
    AUTO INITIALIZE
    ================================ */
 
-if(window.location.pathname.includes("login.html") ||
-   window.location.pathname.includes("register.html")){
+if (window.location.pathname.includes("login.html") ||
+  window.location.pathname.includes("register.html")) {
 
-    redirectIfAuthenticated();
-    
-    if (window.location.pathname.includes("login.html")) {
-        window.addEventListener('DOMContentLoaded', initializeKeypad);
-    }
-    
-    if (window.location.pathname.includes("register.html")) {
-        window.addEventListener('DOMContentLoaded', initializeSecurityQuestions);
-    }
+  redirectIfAuthenticated();
+
+  if (window.location.pathname.includes("login.html")) {
+    window.addEventListener('DOMContentLoaded', initializeKeypad);
+  }
+
+  if (window.location.pathname.includes("register.html")) {
+    window.addEventListener('DOMContentLoaded', initializeSecurityQuestions);
+  }
 }

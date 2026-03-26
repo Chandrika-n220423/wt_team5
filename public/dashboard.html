@@ -9,6 +9,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/dashboard.css">
+    
+    <!-- Leaflet default CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 </head>
 
 <body>
@@ -167,72 +170,93 @@ const currentUserId = requireAuth();
                         <p>Here's what's happening with your accounts today.</p>
                     </div>
 
-                    <div class="cards-row">
-                        <div class="dashboard-card balance-card">
-                            <div class="card-title">Available Balance</div>
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <div class="card-value" id="dashBalance">₹0.00</div>
-                                <button type="button" id="toggleBalanceBtn" style="border: none; background: transparent; color: inherit; font-size: 1.2rem; cursor: pointer; padding: 0;">
-                                    <i class="fas fa-eye-slash" id="toggleBalanceIcon"></i>
-                                </button>
+                    <style>
+                        @media (min-width: 993px) {
+                            #topCardsRow {
+                                grid-template-columns: 2fr 1fr;
+                            }
+                        }
+                    </style>
+                    <div class="cards-row" id="topCardsRow">
+                        <!-- Left Column: Balance, Add Money & Quick Actions Stacked -->
+                        <div style="display: flex; flex-direction: column; gap: 20px;">
+                            <!-- Balance Card -->
+                            <div class="dashboard-card balance-card" style="margin-bottom: 0;">
+                                <div class="card-title">Available Balance</div>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div class="card-value" id="dashBalance">₹0.00</div>
+                                    <button type="button" id="toggleBalanceBtn" style="border: none; background: transparent; color: inherit; font-size: 1.2rem; cursor: pointer; padding: 0;">
+                                        <i class="fas fa-eye-slash" id="toggleBalanceIcon"></i>
+                                    </button>
+                                </div>
+                                <div id="zeroBalanceMessage" style="background: rgba(255,59,48,0.2); color: #fff; padding: 8px 12px; border-radius: 4px; margin-top: 12px; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.3); display: none;">
+                                    <i class="fas fa-exclamation-circle" style="margin-right: 6px;"></i>No balance available. Please add money to start transactions.
+                                </div>
+                                <div class="card-actions">
+                                    <button class="btn btn-outline btn-send" id="dashSendBtn"
+                                        style="background:rgba(255,255,255,0.2);color:white;border:none;"
+                                        onclick="document.querySelector('[data-target=\'view-transfer\']').click()">Send</button>
+                                    <button class="btn btn-outline"
+                                        style="background:rgba(255,255,255,0.2);color:white;border:none;"
+                                        onclick="document.querySelector('[data-target=\'view-qr\']').click()">Receive</button>
+                                </div>
                             </div>
-                            <div id="zeroBalanceMessage" style="background: rgba(255,59,48,0.2); color: #fff; padding: 8px 12px; border-radius: 4px; margin-top: 12px; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.3); display: none;">
-                                <i class="fas fa-exclamation-circle" style="margin-right: 6px;"></i>No balance available. Please add money to start transactions.
-                            </div>
-                            <div class="card-actions">
-                                <button class="btn btn-outline btn-send" id="dashSendBtn"
-                                    style="background:rgba(255,255,255,0.2);color:white;border:none;"
-                                    onclick="document.querySelector('[data-target=\'view-transfer\']').click()">Send</button>
-                                <button class="btn btn-outline"
-                                    style="background:rgba(255,255,255,0.2);color:white;border:none;"
-                                    onclick="document.querySelector('[data-target=\'view-qr\']').click()">Receive</button>
-                            </div>
-                        </div>
+                            
+                            <!-- Side-by-Side Wrapper for Add Money & Quick Actions -->
+                            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                                <!-- Add Money Card -->
+                                <div class="dashboard-card" id="addMoneyCard" style="border: 2px dashed var(--primary); background-color: rgba(var(--primary-rgb), 0.02); margin-bottom: 0; flex: 1; min-width: 250px;">
+                                    <div class="card-title" style="color: var(--primary);">
+                                        <span><i class="fas fa-wallet" style="margin-right: 8px;"></i>Add Money to Wallet</span>
+                                    </div>
+                                    <p style="font-size: 0.85rem; color: var(--text-light); margin-bottom: 16px;">Deposit funds directly into your account instantly.</p>
+                                    <form id="addMoneyForm">
+                                        <div class="form-group" style="margin-bottom: 12px;">
+                                            <div style="position: relative;">
+                                                <span style="position: absolute; left: 12px; top: 12px; color: var(--text-light); font-weight: bold;">₹</span>
+                                                <input type="number" id="addMoneyAmount" class="form-control" placeholder="0.00" min="1" step="0.01" required style="padding-left: 30px;">
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary btn-block" id="addMoneyBtn">
+                                            <i class="fas fa-plus-circle" style="margin-right: 6px;"></i>Add Money
+                                        </button>
+                                        <div id="addMoneyMessage" style="margin-top: 12px; font-size: 0.85rem; font-weight: 500; display: none; text-align: center;"></div>
+                                    </form>
+                                </div>
 
-                        <!-- Add Money Card -->
-                        <div class="dashboard-card" id="addMoneyCard" style="border: 2px dashed var(--primary); background-color: rgba(var(--primary-rgb), 0.02);">
-                            <div class="card-title" style="color: var(--primary);">
-                                <span><i class="fas fa-wallet" style="margin-right: 8px;"></i>Add Money to Wallet</span>
-                            </div>
-                            <p style="font-size: 0.85rem; color: var(--text-light); margin-bottom: 16px;">Deposit funds directly into your account instantly.</p>
-                            <form id="addMoneyForm">
-                                <div class="form-group" style="margin-bottom: 12px;">
-                                    <div style="position: relative;">
-                                        <span style="position: absolute; left: 12px; top: 12px; color: var(--text-light); font-weight: bold;">₹</span>
-                                        <input type="number" id="addMoneyAmount" class="form-control" placeholder="0.00" min="1" step="0.01" required style="padding-left: 30px;">
+                                <!-- Quick Actions Stacked -->
+                                <div class="dashboard-card" style="margin: 0; display: flex; flex-direction: column; flex: 1; min-width: 250px;">
+                                    <div class="card-title">Quick Actions</div>
+                                    <div class="quick-actions-grid" style="grid-template-columns: repeat(2, 1fr); gap: 15px; flex: 1; align-content: start;">
+                                        <button class="action-btn" style="padding: 15px 10px;"
+                                            onclick="document.querySelector('[data-target=\'view-transfer\']').click()">
+                                            <div class="icon-bg" style="width: 45px; height: 45px; font-size: 1.1rem; margin-bottom: 10px;"><i class="fas fa-paper-plane"></i></div>
+                                            <span style="font-size: 0.85rem; font-weight: 500;">UPI</span>
+                                        </button>
+                                        <button class="action-btn" style="padding: 15px 10px;"
+                                            onclick="document.querySelector('[data-target=\'view-qr\']').click()">
+                                            <div class="icon-bg" style="width: 45px; height: 45px; font-size: 1.1rem; margin-bottom: 10px;"><i class="fas fa-qrcode"></i></div>
+                                            <span style="font-size: 0.85rem; font-weight: 500;">Scan QR</span>
+                                        </button>
+                                        <button class="action-btn" style="padding: 15px 10px;"
+                                            onclick="document.querySelector('[data-target=\'view-statements\']').click()">
+                                            <div class="icon-bg" style="width: 45px; height: 45px; font-size: 1.1rem; margin-bottom: 10px;"><i class="fas fa-file-download"></i></div>
+                                            <span style="font-size: 0.85rem; font-weight: 500;">Statement</span>
+                                        </button>
+                                        <button class="action-btn" style="padding: 15px 10px;"
+                                            onclick="document.querySelector('[data-target=\'view-analytics\']').click()">
+                                            <div class="icon-bg" style="width: 45px; height: 45px; font-size: 1.1rem; margin-bottom: 10px;"><i class="fas fa-chart-line"></i></div>
+                                            <span style="font-size: 0.85rem; font-weight: 500;">Analytics</span>
+                                        </button>
                                     </div>
                                 </div>
-                                <button type="submit" class="btn btn-primary btn-block" id="addMoneyBtn">
-                                    <i class="fas fa-plus-circle" style="margin-right: 6px;"></i>Add Money
-                                </button>
-                                <div id="addMoneyMessage" style="margin-top: 12px; font-size: 0.85rem; font-weight: 500; display: none; text-align: center;"></div>
-                            </form>
+                            </div>
                         </div>
 
-                        <div class="dashboard-card">
-                            <div class="card-title">Quick Actions</div>
-                            <div class="quick-actions-grid">
-                                <button class="action-btn"
-                                    onclick="document.querySelector('[data-target=\'view-transfer\']').click()">
-                                    <div class="icon-bg"><i class="fas fa-paper-plane"></i></div>
-                                    <span>UPI</span>
-                                </button>
-                                <button class="action-btn"
-                                    onclick="document.querySelector('[data-target=\'view-qr\']').click()">
-                                    <div class="icon-bg"><i class="fas fa-qrcode"></i></div>
-                                    <span>Scan QR</span>
-                                </button>
-                                <button class="action-btn"
-                                    onclick="document.querySelector('[data-target=\'view-statements\']').click()">
-                                    <div class="icon-bg"><i class="fas fa-file-download"></i></div>
-                                    <span>Statement</span>
-                                </button>
-                                <button class="action-btn"
-                                    onclick="document.querySelector('[data-target=\'view-analytics\']').click()">
-                                    <div class="icon-bg"><i class="fas fa-chart-line"></i></div>
-                                    <span>Analytics</span>
-                                </button>
-                            </div>
+                        <!-- Right Column: Map Card -->
+                        <div class="dashboard-card" style="padding: 0; display: flex; flex-direction: column; overflow: hidden; min-height: 350px; height: 100%;">
+                            <div class="card-title" style="padding: 20px 20px 0 20px;">Branch Locations</div>
+                            <div id="branchMap" style="flex: 1; min-height: 250px; width: 100%; border-radius: 0 0 var(--radius-lg) var(--radius-lg); z-index: 1;"></div>
                         </div>
                     </div>
 
@@ -309,6 +333,11 @@ const currentUserId = requireAuth();
                                     <label class="form-label">Aadhaar Number <i class="fas fa-lock" style="font-size:0.8rem; color:var(--text-light); margin-left:4px;"></i></label>
                                     <input type="text" id="profAadhaar" class="form-control" readonly
                                         style="background:#f0f0f0; cursor:not-allowed; border: 1px solid #ddd;">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label">Registered Branch <i class="fas fa-lock" style="font-size:0.8rem; color:var(--text-light); margin-left:4px;"></i></label>
+                                    <input type="text" id="profBranch" class="form-control" readonly
+                                        style="background:#f0f0f0; cursor:not-allowed; border: 1px solid #ddd; text-transform: capitalize;">
                                 </div>
                             </div>
                             <div id="profMessage"
@@ -613,6 +642,7 @@ const currentUserId = requireAuth();
     </div>
 
     <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="js/app.js"></script>
