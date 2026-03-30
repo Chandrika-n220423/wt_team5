@@ -417,6 +417,29 @@
 .badge-warning { background-color: rgba(255, 149, 0, 0.1); color: #ff9500; }
 
 /* ==========================================================================
+   2x2 Dashboard Grid
+   ========================================================================== */
+.dashboard-grid-2x2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: minmax(240px, auto);
+    gap: 24px;
+    margin-bottom: 32px;
+    align-items: stretch;
+}
+
+.dash-grid-cell {
+    height: 100%;
+    box-sizing: border-box;
+}
+
+/* Quick actions in the 2x2 grid should use 2 columns internally */
+.dashboard-grid-2x2 .quick-actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+    margin-top: 16px;
+}
+
+/* ==========================================================================
    Responsive Main Layout
    ========================================================================== */
 @media (max-width: 992px) {
@@ -456,6 +479,10 @@
 @media (max-width: 768px) {
     .cards-row {
         grid-template-columns: 1fr;
+    }
+    .dashboard-grid-2x2 {
+        grid-template-columns: 1fr;
+        grid-auto-rows: auto;
     }
     .view-container {
         padding: 20px;
